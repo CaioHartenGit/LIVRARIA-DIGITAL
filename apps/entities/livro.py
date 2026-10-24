@@ -14,7 +14,7 @@ class Livro:
     @id_livro.setter
     def id_livro(self, NovoId):
         if NovoId is not None:
-            if not isinstance(NovoId, int):
+            if not isinstance(NovoId, int) or isinstance(NovoId, bool):
                 raise ValueError("O ID do livro deve ser um número inteiro")
             if NovoId <= 0:
                 raise ValueError("O ID do livro deve ser maior que 0")
@@ -56,7 +56,7 @@ class Livro:
 
     @total_paginas.setter
     def total_paginas(self, NovoTotalPaginas):
-        if not isinstance(NovoTotalPaginas, int):
+        if not isinstance(NovoTotalPaginas, int) or isinstance(NovoTotalPaginas, bool):
             raise ValueError("O total de páginas deve ser um número inteiro")
         if NovoTotalPaginas <= 0:
             raise ValueError("O total de páginas deve ser maior que 0")
