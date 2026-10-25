@@ -5,7 +5,7 @@ class LivroService:
         self.livro_repository = livro_repository
 
     def cadastrar(self, titulo, autor, total_paginas, arquivo_path):
-        livrocriar = LivroCreate(titulo, autor, total_paginas, arquivo_path)
+        livrocriar = LivroCreate(titulo = titulo, autor = autor, total_paginas = total_paginas, arquivo_path = arquivo_path)
 
         # Corrigido o nome do método do repositório para buscar_por_nome
         livrocadastrado = self.livro_repository.buscar_por_nome(livrocriar.titulo)
