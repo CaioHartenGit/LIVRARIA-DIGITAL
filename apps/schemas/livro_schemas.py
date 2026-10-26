@@ -22,3 +22,4 @@ class LivroResponse(BaseModel):
     total_paginas: int
     arquivo_path: str
     ativo: bool
+

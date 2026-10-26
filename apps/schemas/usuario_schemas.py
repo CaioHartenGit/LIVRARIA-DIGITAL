@@ -6,6 +6,7 @@ class UsuarioCreate(BaseModel):
     nome: str = Field(min_length = 1, max_length = 100, description = "Nome do usuário")
     email: str = Field(min_length = 1, max_length = 100, description = "Email do usuário")
     senha: str = Field(min_length = 1, max_length = 100, description = "Senha do usuário")
+    tipo_usuario: Literal["admin", "usuario"] = Field(description = "Tipo de usuário, pode ser 'admin' ou 'usuario'")
 
 # Criando Classe UsuarioResponse
 class UsuarioResponse(BaseModel):
@@ -14,3 +15,4 @@ class UsuarioResponse(BaseModel):
     nome: str
     email: str
     ativo: bool
+    tipo_usuario: Literal["admin", "usuario"] = Field(description = "Tipo de usuário, pode ser 'admin' ou 'usuario'")

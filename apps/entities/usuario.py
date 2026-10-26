@@ -1,10 +1,11 @@
 class Usuario:
-    def __init__(self,nome: str, email: str, senha: str, id: int = None, ativo: bool = True):
+    def __init__(self,nome: str, email: str, senha: str,tipo_usuario: str, id: int = None, ativo: bool = True):
         self.id = id
         self.nome = nome
         self.email = email
         self.senha = senha
         self.ativo = ativo
+        self.tipo_usuario = tipo_usuario
 
     @property
     def id(self):
@@ -76,5 +77,20 @@ class Usuario:
         if not isinstance(novo_ativo,bool):
             raise ValueError("O status de ativo deve ser um booleano")
         self._ativo = novo_ativo
+
+    @property
+    def tipo_usuario(self):
+        return self._tipo_usuario
+    @tipo_usuario.setter
+    def tipo_usuario(self, novo_tipo_usuario: str):
+        if not isinstance(novo_tipo_usuario,str):
+            raise ValueError("O tipo de usuário deve ser uma string")
+        novo_tipo_usuario = novo_tipo_usuario.strip()
+        if novo_tipo_usuario == "":
+            raise ValueError("O tipo de usuário não pode ser vazio")
+        if len(novo_tipo_usuario) < 3:
+            raise ValueError("O tipo de usuário deve ter pelo menos 3 caracteres")
+        self._tipo_usuario = novo_tipo_usuario
+
 
             

@@ -6,8 +6,7 @@ class LivroService:
 
     def cadastrar(self, titulo, autor, total_paginas, arquivo_path):
         livrocriar = LivroCreate(titulo = titulo, autor = autor, total_paginas = total_paginas, arquivo_path = arquivo_path)
-
-        # Corrigido o nome do método do repositório para buscar_por_nome
+        
         livrocadastrado = self.livro_repository.buscar_por_nome(livrocriar.titulo)
         if livrocadastrado:
             raise ValueError("Já existe um livro com esse título cadastrado")
@@ -21,7 +20,6 @@ class LivroService:
 
     def listar_livro(self):
         lista = self.livro_repository.listar_livros()
-  
         if not lista:
             raise ValueError("Não existem livros cadastrados")
         return lista
@@ -34,7 +32,6 @@ class LivroService:
 
     def buscar_por_nome(self, titulo):
         livro = self.livro_repository.buscar_por_nome(titulo)
-    
         if not livro:
             raise ValueError("Título do livro não existe")
         return livro
