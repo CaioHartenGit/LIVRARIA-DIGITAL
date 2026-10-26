@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Literal
+
 
 # Criando Classe UsuarioCreate
 class UsuarioCreate(BaseModel):
@@ -14,4 +14,4 @@ class UsuarioResponse(BaseModel):
     nome: str
     email: str
     ativo: bool
-    tipo_usuario: Literal["admin", "usuario"] = Field(description = "Tipo de usuário, pode ser 'admin' ou 'usuario'")
+    tipo_usuario: str

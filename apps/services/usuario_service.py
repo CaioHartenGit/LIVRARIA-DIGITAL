@@ -30,3 +30,17 @@ class UsuarioService:
         if usuario['tipo_usuario'] != 'admin':
             raise ValueError("Acesso negado. Apenas administradores podem listar todos os usuários.")
         return self.usuario_repository.listar_tudo_admin()
+
+    def deletar_usuario(self, id_usuario, id_admin):
+        administrador = self.usuario_repository.buscar_usuario_por_id(id_admin)
+
+        if administrador is None:
+            raise ValueError("Administrador não encontrado")
+        if administrador["tipo_usuario"] != "admin" or not administrador["ativo"]:
+            raise PermissionError("Apenas administradores ativos podem deletar usuários")
+
+        usuario = self.usuario_repository.buscar_usuario_por_id(id_usuario)
+        if usuario is None:
+            raise ValueError("Usuário a ser deletado não encontrado")
+
+        self.usuario_repository.deletar_usuario(id_usuario)

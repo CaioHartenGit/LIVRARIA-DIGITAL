@@ -128,7 +128,7 @@ class UsuarioRepository:
         try:
             cursor.execute(
                 '''
-                SELECT id, nome, email, ativo, senha, tipo_usuario
+                SELECT id, nome, email, ativo, tipo_usuario
                 FROM usuario
                 '''
             )
