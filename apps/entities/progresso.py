@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Progresso:
     def __init__(self, usuario_id: int, livro_id: int, pagina_atual = 0, concluido = False, id = None, atualizado_em = None):
         self.usuario_id = usuario_id
@@ -66,8 +68,9 @@ class Progresso:
         return self._atualizado_em
     @atualizado_em.setter
     def atualizado_em(self, NovoAtualizadoEm: datetime):
-        if not isinstance(NovoAtualizadoEm, datetime):
-            raise ValueError("O atualizado em do progresso deve ser um datetime")
+        if NovoAtualizadoEm is not  None:
+            if not isinstance(NovoAtualizadoEm, datetime):
+                raise ValueError("O atualizado em do progresso deve ser um datetime")
         self._atualizado_em = NovoAtualizadoEm
     
     
