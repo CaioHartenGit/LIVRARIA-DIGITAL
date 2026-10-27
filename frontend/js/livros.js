@@ -6,12 +6,13 @@ if (!usuarioLogado) {
 }
 
 let mapaProgresso = {};
+let todosLivrosCache = [];
+let filtroAtual = "todos";
 
 document.addEventListener("DOMContentLoaded", () => {
     const userInfo = document.getElementById("user-info");
-    userInfo.innerHTML = `Olá, <strong>${usuarioLogado.nome}</strong> <span class="role-tag">${usuarioLogado.tipo_usuario}</span>`;
+    userInfo.innerHTML = `👤 <strong>${usuarioLogado.nome}</strong> <span class="role-tag">${usuarioLogado.tipo_usuario}</span>`;
 
-    // Se não for admin, oculta o botão de cadastrar livro (ou exibe apenas para admin)
     const btnNovoLivro = document.getElementById("btn-novo-livro");
     if (usuarioLogado.tipo_usuario !== "admin") {
         btnNovoLivro.style.display = "none";
@@ -36,8 +37,29 @@ async function carregarProgressoUsuario() {
             });
         }
     } catch (e) {
-        // Usuário ainda não possui progresso registrado
+        // Sem progresso registrado ainda
     }
+}
+
+function atualizarPainelEstatisticas(livros) {
+    const totalLivros = Array.isArray(livros) ? livros.length : 0;
+    let emLeitura = 0;
+    let concluidos = 0;
+    let paginasLidas = 0;
+
+    Object.values(mapaProgresso).forEach((prog) => {
+        paginasLidas += prog.pagina_atual || 0;
+        if (prog.concluido) {
+            concluidos++;
+        } else if (prog.pagina_atual > 0) {
+            emLeitura++;
+        }
+    });
+
+    document.getElementById("stat-total-livros").textContent = totalLivros;
+    document.getElementById("stat-lendo").textContent = emLeitura;
+    document.getElementById("stat-concluidos").textContent = concluidos;
+    document.getElementById("stat-paginas").textContent = paginasLidas;
 }
 
 async function carregarAcervo() {
@@ -45,21 +67,48 @@ async function carregarAcervo() {
     await carregarProgressoUsuario();
 
     const grid = document.getElementById("books-grid");
-    grid.innerHTML = "<p style='color: var(--text-muted);'>Carregando livros...</p>";
+    grid.innerHTML = "<p style='color: var(--text-muted);'>Sincronizando biblioteca...</p>";
 
     try {
         const resp = await fetch(`${API_URL}/livros/`);
         const dados = await resp.json();
 
         if (!resp.ok || !Array.isArray(dados)) {
-            grid.innerHTML = `<p style="color: var(--text-muted);">Nenhum livro cadastrado ainda.</p>`;
+            todosLivrosCache = [];
+            atualizarPainelEstatisticas([]);
+            grid.innerHTML = `<p style="color: var(--text-muted);">Nenhum livro cadastrado no acervo ainda.</p>`;
             return;
         }
 
-        renderizarLivros(dados);
+        todosLivrosCache = dados;
+        atualizarPainelEstatisticas(dados);
+        aplicarFiltro(filtroAtual);
     } catch (erro) {
-        grid.innerHTML = `<p style="color: var(--text-muted);">Nenhum livro cadastrado no momento.</p>`;
+        grid.innerHTML = `<p style="color: var(--text-muted);">Nenhum livro disponível no momento.</p>`;
     }
+}
+
+function aplicarFiltro(tipo) {
+    filtroAtual = tipo;
+    ["todos", "lendo", "concluidos"].forEach((id) => {
+        const btn = document.getElementById(`filtro-${id}`);
+        if (btn) btn.classList.toggle("active", id === tipo);
+    });
+
+    let filtrados = todosLivrosCache;
+    if (tipo === "lendo") {
+        filtrados = todosLivrosCache.filter((l) => {
+            const p = mapaProgresso[l.id];
+            return p && p.pagina_atual > 0 && !p.concluido;
+        });
+    } else if (tipo === "concluidos") {
+        filtrados = todosLivrosCache.filter((l) => {
+            const p = mapaProgresso[l.id];
+            return p && p.concluido;
+        });
+    }
+
+    renderizarLivros(filtrados);
 }
 
 async function buscarLivros() {
@@ -73,14 +122,14 @@ async function buscarLivros() {
         const resp = await fetch(`${API_URL}/livros/titulo/${encodeURIComponent(termo)}`);
         const dados = await resp.json();
 
-        if (!resp.ok) {
-            grid.innerHTML = `<p style="color: var(--text-muted);">Nenhum livro encontrado com "${termo}".</p>`;
+        if (!resp.ok || !Array.isArray(dados)) {
+            grid.innerHTML = `<p style="color: var(--text-muted);">Nenhum livro encontrado para "${termo}".</p>`;
             return;
         }
 
         renderizarLivros(dados);
     } catch (erro) {
-        grid.innerHTML = `<p style="color: var(--text-muted);">Erro ao buscar livros.</p>`;
+        grid.innerHTML = `<p style="color: var(--text-muted);">Erro ao pesquisar livros.</p>`;
     }
 }
 
@@ -94,44 +143,60 @@ function renderizarLivros(livros) {
     const grid = document.getElementById("books-grid");
     grid.innerHTML = "";
 
-    livros.forEach((livro) => {
+    if (!livros.length) {
+        grid.innerHTML = `<p style="color: var(--text-muted);">Nenhum livro encontrado nesta categoria.</p>`;
+        return;
+    }
+
+    livros.forEach((livro, index) => {
         const prog = mapaProgresso[livro.id];
         const paginaAtual = prog ? prog.pagina_atual : 0;
         const porcentagem = livro.total_paginas > 0
             ? Math.min(100, Math.round((paginaAtual / livro.total_paginas) * 100))
             : 0;
+
         const statusTexto = prog && prog.concluido
             ? "✅ Concluído"
-            : prog
-                ? `Lendo: pág. ${paginaAtual} de ${livro.total_paginas}`
-                : `Não iniciado (${livro.total_paginas} págs)`;
+            : prog && paginaAtual > 0
+                ? `📖 Pág. ${paginaAtual} de ${livro.total_paginas}`
+                : "✨ Novo para leitura";
+
+        const temaCapa = `cover-theme-${(livro.id || index) % 5}`;
 
         const botaoDeletar = usuarioLogado.tipo_usuario === "admin"
-            ? `<button class="btn btn-danger" onclick="deletarLivro(${livro.id})" title="Excluir livro">🗑️</button>`
+            ? `<button class="btn btn-danger" onclick="deletarLivro(${livro.id})" title="Excluir obra">🗑️</button>`
             : "";
 
         const card = document.createElement("div");
         card.className = "book-card";
         card.innerHTML = `
-            <div>
-                <div class="book-icon">📖</div>
-                <div class="book-title">${livro.titulo}</div>
-                <div class="book-author">por ${livro.autor}</div>
-                <div class="progress-container">
-                    <div class="book-meta">
-                        <span>${statusTexto}</span>
-                        <strong>${porcentagem}%</strong>
-                    </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: ${porcentagem}%"></div>
+            <div class="book-cover-banner ${temaCapa}">
+                <span class="book-cover-badge">${livro.total_paginas} págs</span>
+                <div class="book-cover-title-preview">${livro.titulo}</div>
+            </div>
+            <div class="book-card-body">
+                <div>
+                    <div class="book-title">${livro.titulo}</div>
+                    <div class="book-author">por ${livro.autor}</div>
+                    <div class="progress-container">
+                        <div class="book-meta">
+                            <span>${statusTexto}</span>
+                            <strong>${porcentagem}%</strong>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${porcentagem}%"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="book-actions">
-                <button class="btn btn-primary btn-full" onclick="abrirLeitor(${livro.id}, ${paginaAtual})">
-                    🎧 Ler / Audiobook
-                </button>
-                ${botaoDeletar}
+                <div class="book-actions">
+                    <button class="btn btn-primary btn-full" onclick="abrirLeitor(${livro.id}, ${paginaAtual})">
+                        🎧 Ler & Audiobook
+                    </button>
+                    <a href="${API_URL}/${livro.arquivo_path}" target="_blank" class="btn btn-outline" title="Abrir PDF original">
+                        📄
+                    </a>
+                    ${botaoDeletar}
+                </div>
             </div>
         `;
         grid.appendChild(card);
@@ -139,9 +204,8 @@ function renderizarLivros(livros) {
 }
 
 async function abrirLeitor(livroId, paginaAtual) {
-    let paginaInicial = paginaAtual > 0 ? paginaAtual : 1;
+    const paginaInicial = paginaAtual > 0 ? paginaAtual : 1;
 
-    // Se o usuário ainda não tinha progresso para este livro, cria na página 1
     if (!mapaProgresso[livroId]) {
         try {
             await fetch(`${API_URL}/progresso/`, {
@@ -154,7 +218,7 @@ async function abrirLeitor(livroId, paginaAtual) {
                 })
             });
         } catch (e) {
-            // Ignora caso já exista
+            // Progresso já iniciado
         }
     }
 
@@ -186,7 +250,7 @@ async function enviarNovoLivro(event) {
     formData.append("arquivo", arquivo);
 
     btn.disabled = true;
-    btn.textContent = "Enviando e contando páginas...";
+    btn.textContent = "Processando PDF e contando páginas...";
 
     try {
         const resp = await fetch(`${API_URL}/livros/`, {
@@ -208,7 +272,7 @@ async function enviarNovoLivro(event) {
         alerta.style.display = "block";
     } finally {
         btn.disabled = false;
-        btn.textContent = "Enviar PDF e Cadastrar";
+        btn.textContent = "Enviar PDF e Cadastrar Obra";
     }
 }
 

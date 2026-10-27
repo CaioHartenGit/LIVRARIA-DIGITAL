@@ -3,41 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Livraria Digital — Estante de Livros</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>LuminaBooks — Minha Estante</title>
+    <link rel="stylesheet" href="css/style-layout.css">
+    <link rel="stylesheet" href="css/style-components.css">
+    <link rel="stylesheet" href="css/style-pages.css">
 </head>
 <body>
     <nav class="navbar">
         <a href="livros.html" class="nav-brand">
-            <span>📚</span>
-            <span>Livraria Digital</span>
+            <div class="nav-brand-icon">✨</div>
+            <span>LuminaBooks</span>
         </a>
         <div class="nav-actions">
             <div class="user-badge" id="user-info">Carregando...</div>
-            <button class="btn btn-primary" id="btn-novo-livro" onclick="abrirModalUpload()">+ Novo Livro (PDF)</button>
+            <button class="btn btn-primary" id="btn-novo-livro" onclick="abrirModalUpload()">
+                + Upload de Livro (PDF)
+            </button>
             <button class="btn btn-outline" onclick="sair()">Sair</button>
         </div>
     </nav>
 
     <main class="container">
-        <div class="catalog-header">
-            <div>
-                <h2>Acervo Digital</h2>
-                <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 4px;">
-                    Escolha um livro para ler ou ouvir no modo Audiobook
-                </p>
+        <!-- Painel de Estatísticas de Leitura -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon purple">📚</div>
+                <div class="stat-info">
+                    <span>Obras no Acervo</span>
+                    <strong id="stat-total-livros">0</strong>
+                </div>
             </div>
+            <div class="stat-card">
+                <div class="stat-icon amber">📖</div>
+                <div class="stat-info">
+                    <span>Em Leitura</span>
+                    <strong id="stat-lendo">0</strong>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">🏆</div>
+                <div class="stat-info">
+                    <span>Livros Concluídos</span>
+                    <strong id="stat-concluidos">0</strong>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon pink">📄</div>
+                <div class="stat-info">
+                    <span>Páginas Lidas</span>
+                    <strong id="stat-paginas">0</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- Barra de Filtros e Pesquisa -->
+        <div class="catalog-header">
+            <div class="filter-pills">
+                <button class="filter-pill active" id="filtro-todos" onclick="aplicarFiltro('todos')">Todos</button>
+                <button class="filter-pill" id="filtro-lendo" onclick="aplicarFiltro('lendo')">Lendo Agora</button>
+                <button class="filter-pill" id="filtro-concluidos" onclick="aplicarFiltro('concluidos')">Concluídos</button>
+            </div>
+
             <div class="search-bar">
-                <input type="text" id="input-busca" placeholder="Buscar livro por título..." onkeyup="filtrarPorTecla(event)">
+                <input type="text" id="input-busca" placeholder="Pesquisar livro por título..." onkeyup="filtrarPorTecla(event)">
                 <button class="btn btn-primary" onclick="buscarLivros()">Buscar</button>
-                <button class="btn btn-outline" onclick="carregarAcervo()">Todos</button>
+                <button class="btn btn-outline" onclick="carregarAcervo()">Limpar</button>
             </div>
         </div>
 
         <div id="catalogo-alerta" class="alert-box"></div>
 
+        <!-- Grade de Livros -->
         <div class="books-grid" id="books-grid">
-            <!-- Cards gerados via JS -->
+            <!-- Cards gerados dinamicamente -->
         </div>
     </main>
 
@@ -45,7 +83,12 @@
     <div class="modal-overlay" id="modal-upload">
         <div class="modal-box">
             <div class="modal-header">
-                <h3>📤 Cadastrar Livro (PDF)</h3>
+                <div>
+                    <h3>📤 Publicar Livro em PDF</h3>
+                    <p style="font-size: 0.83rem; color: var(--text-muted); margin-top: 4px;">
+                        O total de páginas será extraído automaticamente via pypdf
+                    </p>
+                </div>
                 <button class="btn btn-outline" style="padding: 6px 12px;" onclick="fecharModalUpload()">✕</button>
             </div>
 
@@ -53,19 +96,19 @@
 
             <form id="form-upload" onsubmit="enviarNovoLivro(event)">
                 <div class="form-group">
-                    <label for="livro-titulo">Título do Livro</label>
+                    <label for="livro-titulo">Título da Obra</label>
                     <input type="text" id="livro-titulo" placeholder="Ex: Dom Casmurro" required>
                 </div>
                 <div class="form-group">
-                    <label for="livro-autor">Autor</label>
+                    <label for="livro-autor">Autor(a)</label>
                     <input type="text" id="livro-autor" placeholder="Ex: Machado de Assis" required>
                 </div>
                 <div class="form-group">
-                    <label for="livro-arquivo">Arquivo PDF (Páginas contadas automaticamente)</label>
+                    <label for="livro-arquivo">Selecione o arquivo PDF</label>
                     <input type="file" id="livro-arquivo" accept=".pdf" required>
                 </div>
-                <button type="submit" class="btn btn-accent btn-full" id="btn-submit-upload">
-                    Enviar PDF e Cadastrar
+                <button type="submit" class="btn btn-accent btn-full" id="btn-submit-upload" style="padding: 14px;">
+                    Enviar PDF e Cadastrar Obra
                 </button>
             </form>
         </div>

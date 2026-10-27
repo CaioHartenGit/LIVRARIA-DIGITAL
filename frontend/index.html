@@ -3,55 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Livraria Digital — Acesso</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>LuminaBooks — Reading & Audiobook Studio</title>
+    <link rel="stylesheet" href="css/style-layout.css">
+    <link rel="stylesheet" href="css/style-components.css">
+    <link rel="stylesheet" href="css/style-pages.css">
 </head>
 <body>
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <div class="brand-header">
-                <span class="brand-logo">📚</span>
-                <h1>Livraria Digital</h1>
-                <p>Sua plataforma de leitura interativa e Audiobook</p>
+    <div class="auth-split-layout">
+        <!-- Lado Esquerdo: Vitrine da Plataforma -->
+        <section class="auth-showcase">
+            <div>
+                <div class="showcase-badge">
+                    <span>✨</span>
+                    <span>LuminaBooks • Reading & Audiobook Studio</span>
+                </div>
+                <div class="showcase-hero">
+                    <h1>
+                        Transforme seus PDFs em uma experiência <span class="gradient-text">Viva de Leitura.</span>
+                    </h1>
+                    <p>
+                        Faça upload de livros em PDF, acompanhe seu progresso página por página automaticamente no banco de dados e ouça qualquer obra em voz alta no modo Audiobook.
+                    </p>
+                </div>
+
+                <div class="feature-pills">
+                    <div class="feature-pill">
+                        <div class="feature-pill-icon">📄</div>
+                        <div>
+                            <h4>Upload Inteligente</h4>
+                            <p>Contagem automática de páginas via pypdf direto no servidor.</p>
+                        </div>
+                    </div>
+                    <div class="feature-pill">
+                        <div class="feature-pill-icon">🎧</div>
+                        <div>
+                            <h4>Audiobook Integrado</h4>
+                            <p>Narração em voz alta sincronizada com a página atual.</p>
+                        </div>
+                    </div>
+                    <div class="feature-pill">
+                        <div class="feature-pill-icon">📈</div>
+                        <div>
+                            <h4>Progresso em Tempo Real</h4>
+                            <p>Salva automaticamente onde você parou no PostgreSQL.</p>
+                        </div>
+                    </div>
+                    <div class="feature-pill">
+                        <div class="feature-pill-icon">🎨</div>
+                        <div>
+                            <h4>Modo Kindle & Sépia</h4>
+                            <p>Personalize fontes, tamanho do texto e cor do papel.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="auth-tabs">
-                <button type="button" class="tab-btn active" id="tab-login" onclick="alternarAba('login')">Entrar</button>
-                <button type="button" class="tab-btn" id="tab-cadastro" onclick="alternarAba('cadastro')">Criar Conta</button>
+            <div style="color: var(--text-muted); font-size: 0.82rem;">
+                LuminaBooks • Clean Architecture • FastAPI • PostgreSQL • Pydantic v2
             </div>
+        </section>
 
-            <div id="alert-box" class="alert-box"></div>
+        <!-- Lado Direito: Card de Login / Cadastro -->
+        <main class="auth-wrapper">
+            <div class="auth-card">
+                <div class="brand-header">
+                    <div class="brand-logo-box">✨</div>
+                    <h2>LuminaBooks</h2>
+                    <p>Entre na sua conta ou crie seu perfil gratuito</p>
+                </div>
 
-            <!-- Formulário de Login -->
-            <form id="form-login" onsubmit="realizarLogin(event)">
-                <div class="form-group">
-                    <label for="login-email">E-mail</label>
-                    <input type="email" id="login-email" placeholder="seu@email.com" required>
+                <div class="auth-tabs">
+                    <button type="button" class="tab-btn active" id="tab-login" onclick="alternarAba('login')">Entrar</button>
+                    <button type="button" class="tab-btn" id="tab-cadastro" onclick="alternarAba('cadastro')">Criar Conta</button>
                 </div>
-                <div class="form-group">
-                    <label for="login-senha">Senha</label>
-                    <input type="password" id="login-senha" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-full">Entrar na Biblioteca</button>
-            </form>
 
-            <!-- Formulário de Cadastro -->
-            <form id="form-cadastro" style="display: none;" onsubmit="realizarCadastro(event)">
-                <div class="form-group">
-                    <label for="cad-nome">Nome completo</label>
-                    <input type="text" id="cad-nome" placeholder="Ex: Caio Harten" minlength="3" required>
-                </div>
-                <div class="form-group">
-                    <label for="cad-email">E-mail</label>
-                    <input type="email" id="cad-email" placeholder="seu@email.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="cad-senha">Senha</label>
-                    <input type="password" id="cad-senha" placeholder="Mínimo 3 caracteres" minlength="3" required>
-                </div>
-                <button type="submit" class="btn btn-accent btn-full">Cadastrar Conta</button>
-            </form>
-        </div>
+                <div id="alert-box" class="alert-box"></div>
+
+                <!-- Formulário de Login -->
+                <form id="form-login" onsubmit="realizarLogin(event)">
+                    <div class="form-group">
+                        <label for="login-email">E-mail de acesso</label>
+                        <input type="email" id="login-email" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-senha">Sua senha</label>
+                        <input type="password" id="login-senha" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" style="margin-top: 8px; padding: 14px;">
+                        Entrar no LuminaBooks →
+                    </button>
+                </form>
+
+                <!-- Formulário de Cadastro -->
+                <form id="form-cadastro" style="display: none;" onsubmit="realizarCadastro(event)">
+                    <div class="form-group">
+                        <label for="cad-nome">Nome completo</label>
+                        <input type="text" id="cad-nome" placeholder="Ex: Caio Harten" minlength="3" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cad-email">E-mail</label>
+                        <input type="email" id="cad-email" placeholder="seu@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cad-senha">Crie uma senha</label>
+                        <input type="password" id="cad-senha" placeholder="Mínimo 3 caracteres" minlength="3" required>
+                    </div>
+                    <button type="submit" class="btn btn-accent btn-full" style="margin-top: 8px; padding: 14px;">
+                        Criar Minha Conta ✨
+                    </button>
+                </form>
+            </div>
+        </main>
     </div>
 
     <script src="js/auth.js"></script>

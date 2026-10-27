@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Livraria Digital — Leitor & Audiobook</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>LuminaBooks — Leitor & Audiobook Studio</title>
+    <link rel="stylesheet" href="css/style-layout.css">
+    <link rel="stylesheet" href="css/style-components.css">
+    <link rel="stylesheet" href="css/style-pages.css">
 </head>
 <body>
     <nav class="navbar">
         <a href="livros.html" class="nav-brand">
-            <span>⬅️</span>
-            <span>Voltar para a Estante</span>
+            <div class="nav-brand-icon">⬅️</div>
+            <span>LuminaBooks • Voltar à Estante</span>
         </a>
         <div class="nav-actions">
-            <div class="user-badge" id="leitor-progresso-badge">Carregando...</div>
+            <div class="user-badge" id="leitor-progresso-badge">Sincronizando...</div>
         </div>
     </nav>
 
@@ -21,14 +23,14 @@
         <!-- Cabeçalho do Livro -->
         <div class="reader-top-bar">
             <div>
-                <h2 id="titulo-livro">Carregando livro...</h2>
+                <h2 id="titulo-livro">Carregando obra...</h2>
                 <p id="subtitulo-pagina" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
                     Página -- de --
                 </p>
             </div>
-            <div style="min-width: 220px;">
+            <div style="min-width: 240px;">
                 <div class="book-meta">
-                    <span id="status-conclusao">Em leitura</span>
+                    <span id="status-conclusao">📖 Em leitura</span>
                     <strong id="porcentagem-leitura">0%</strong>
                 </div>
                 <div class="progress-bar-bg">
@@ -37,17 +39,26 @@
             </div>
         </div>
 
-        <!-- Painel do Audiobook (TTS em Português) -->
+        <!-- Painel do Audiobook Studio -->
         <div class="audiobook-panel">
             <div class="audiobook-info">
-                <span style="font-size: 1.8rem;">🎧</span>
+                <div class="equalizer" id="audio-equalizer">
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                    <div class="eq-bar"></div>
+                </div>
                 <div>
-                    <strong>Modo Audiobook (Leitor de Voz)</strong>
-                    <div class="audiobook-status" id="status-audio">Pronto para ler a página em voz alta</div>
+                    <strong>🎧 LuminaVox Audiobook Studio</strong>
+                    <div class="audiobook-status" id="status-audio">Pronto para narrar esta página em Português</div>
                 </div>
             </div>
             <div class="audiobook-controls">
-                <select id="velocidade-voz" class="speed-select" title="Velocidade da leitura">
+                <label style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <input type="checkbox" id="auto-avancar" checked>
+                    Auto-avançar pág.
+                </label>
+                <select id="velocidade-voz" class="speed-select" title="Velocidade da narração">
                     <option value="0.9">0.9x</option>
                     <option value="1" selected>1.0x (Normal)</option>
                     <option value="1.25">1.25x (Rápido)</option>
@@ -59,8 +70,26 @@
             </div>
         </div>
 
-        <!-- Folha de Leitura do PDF -->
-        <article class="page-paper" id="conteudo-pagina">
+        <!-- Barra de Personalização Visual (Estilo Kindle) -->
+        <div class="reader-toolbar">
+            <div class="toolbar-group">
+                <span class="toolbar-label">Tema:</span>
+                <button class="chip-btn active" id="tema-dark" onclick="mudarTemaPapel('dark')">🌙 Noturno</button>
+                <button class="chip-btn" id="tema-sepia" onclick="mudarTemaPapel('sepia')">📜 Sépia</button>
+                <button class="chip-btn" id="tema-light" onclick="mudarTemaPapel('light')">☀️ Claro</button>
+            </div>
+
+            <div class="toolbar-group">
+                <span class="toolbar-label">Fonte:</span>
+                <button class="chip-btn" id="fonte-sans" onclick="mudarFonte('sans')">Moderna</button>
+                <button class="chip-btn active" id="fonte-serif" onclick="mudarFonte('serif')">Livro (Serif)</button>
+                <button class="chip-btn" onclick="ajustarTamanhoFonte(-0.08)">A-</button>
+                <button class="chip-btn" onclick="ajustarTamanhoFonte(0.08)">A+</button>
+            </div>
+        </div>
+
+        <!-- Folha de Leitura do Livro -->
+        <article class="page-paper font-serif" id="conteudo-pagina">
             Carregando texto da página...
         </article>
 
@@ -69,7 +98,7 @@
             <button class="btn btn-outline" id="btn-anterior" onclick="mudarPagina(-1)">
                 ⬅️ Página Anterior
             </button>
-            <span id="indicador-pagina" style="font-weight: 600;">Página 1</span>
+            <span id="indicador-pagina" style="font-weight: 700;">Página 1</span>
             <button class="btn btn-primary" id="btn-proxima" onclick="mudarPagina(1)">
                 Próxima Página ➡️
             </button>

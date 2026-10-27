@@ -10,6 +10,7 @@ const livroId = parseInt(params.get("livro_id"));
 let paginaAtual = parseInt(params.get("pagina")) || 1;
 let totalPaginas = 1;
 let textoAtual = "";
+let tamanhoFonteRem = 1.14;
 
 const synth = window.speechSynthesis;
 let falaAtual = null;
@@ -20,6 +21,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
     carregarPagina(paginaAtual);
+
+    // Atalhos de teclado (Setas Esquerda e Direita)
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") mudarPagina(-1);
+        if (e.key === "ArrowRight") mudarPagina(1);
+    });
 });
 
 window.addEventListener("beforeunload", () => {
@@ -28,7 +35,7 @@ window.addEventListener("beforeunload", () => {
     }
 });
 
-async function carregarPagina(numeroPagina) {
+async function carregarPagina(numeroPagina, iniciarAudioAutomatico = false) {
     pararAudiobook();
 
     const conteudoEl = document.getElementById("conteudo-pagina");
@@ -48,18 +55,20 @@ async function carregarPagina(numeroPagina) {
 
         document.getElementById("titulo-livro").textContent = dados.titulo;
         document.getElementById("subtitulo-pagina").textContent = `Página ${paginaAtual} de ${totalPaginas}`;
-        document.getElementById("indicador-pagina").textContent = `Página ${paginaAtual} / ${totalPaginas}`;
+        document.getElementById("indicador-pagina").textContent = `Página ${paginaAtual} de ${totalPaginas}`;
 
         conteudoEl.textContent = textoAtual.length > 0
             ? textoAtual
-            : "[Esta página do PDF não possui texto selecionável ou contém apenas imagens.]";
+            : "[Esta página do PDF não possui texto selecionável ou contém apenas ilustrações.]";
 
-        // Atualiza os botões de paginação
         document.getElementById("btn-anterior").disabled = paginaAtual <= 1;
         document.getElementById("btn-proxima").disabled = paginaAtual >= totalPaginas;
 
-        // Salva o progresso automaticamente no PostgreSQL
         await salvarProgressoNoBanco(paginaAtual);
+
+        if (iniciarAudioAutomatico && textoAtual.length > 0) {
+            iniciarAudiobook();
+        }
     } catch (erro) {
         conteudoEl.textContent = `Erro: ${erro.message}`;
     }
@@ -72,7 +81,7 @@ async function salvarProgressoNoBanco(pagina) {
     document.getElementById("porcentagem-leitura").textContent = `${porcentagem}%`;
     document.getElementById("barra-progresso").style.width = `${porcentagem}%`;
     document.getElementById("status-conclusao").textContent = concluido ? "✅ Livro Concluído!" : "📖 Em leitura";
-    document.getElementById("leitor-progresso-badge").innerHTML = `Progresso salvo: <strong>Pág. ${pagina}</strong>`;
+    document.getElementById("leitor-progresso-badge").innerHTML = `Salvo no banco: <strong>Pág. ${pagina}/${totalPaginas}</strong>`;
 
     try {
         await fetch(`${API_URL}/progresso/${usuarioLogado.id}/${livroId}/`, {
@@ -89,14 +98,50 @@ function mudarPagina(direcao) {
     const novaPagina = paginaAtual + direcao;
     if (novaPagina >= 1 && novaPagina <= totalPaginas) {
         carregarPagina(novaPagina);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 }
 
-// ==================== CONTROLES DO AUDIOBOOK (TTS) ====================
+// ==================== PERSONALIZAÇÃO DO LEITOR (KINDLE MODE) ====================
+
+function mudarTemaPapel(tema) {
+    const folha = document.getElementById("conteudo-pagina");
+    folha.classList.remove("theme-sepia", "theme-light");
+
+    if (tema === "sepia") folha.classList.add("theme-sepia");
+    if (tema === "light") folha.classList.add("theme-light");
+
+    ["dark", "sepia", "light"].forEach((t) => {
+        document.getElementById(`tema-${t}`).classList.toggle("active", t === tema);
+    });
+}
+
+function mudarFonte(tipo) {
+    const folha = document.getElementById("conteudo-pagina");
+    if (tipo === "serif") {
+        folha.classList.add("font-serif");
+    } else {
+        folha.classList.remove("font-serif");
+    }
+    document.getElementById("fonte-sans").classList.toggle("active", tipo === "sans");
+    document.getElementById("fonte-serif").classList.toggle("active", tipo === "serif");
+}
+
+function ajustarTamanhoFonte(delta) {
+    tamanhoFonteRem = Math.min(1.6, Math.max(0.9, tamanhoFonteRem + delta));
+    document.getElementById("conteudo-pagina").style.fontSize = `${tamanhoFonteRem.toFixed(2)}rem`;
+}
+
+// ==================== CONTROLES DO AUDIOBOOK STUDIO ====================
+
+function definirAnimacaoEqualizador(ativo) {
+    const eq = document.getElementById("audio-equalizer");
+    if (eq) eq.classList.toggle("playing", ativo);
+}
 
 function iniciarAudiobook() {
     if (!textoAtual) {
-        document.getElementById("status-audio").textContent = "Não há texto nesta página para ler.";
+        document.getElementById("status-audio").textContent = "Não há texto nesta página para narrar.";
         return;
     }
 
@@ -106,7 +151,6 @@ function iniciarAudiobook() {
     falaAtual.lang = "pt-BR";
     falaAtual.rate = parseFloat(document.getElementById("velocidade-voz").value) || 1.0;
 
-    // Tenta selecionar uma voz em Português se disponível no sistema
     const vozes = synth.getVoices();
     const vozPt = vozes.find((v) => v.lang.includes("pt-BR") || v.lang.includes("pt"));
     if (vozPt) {
@@ -114,15 +158,23 @@ function iniciarAudiobook() {
     }
 
     falaAtual.onstart = () => {
-        document.getElementById("status-audio").textContent = `🔊 Lendo a Página ${paginaAtual} em voz alta...`;
+        definirAnimacaoEqualizador(true);
+        document.getElementById("status-audio").textContent = `🔊 Narrando a Página ${paginaAtual} em voz alta...`;
     };
 
     falaAtual.onend = () => {
-        document.getElementById("status-audio").textContent = `✅ Leitura da Página ${paginaAtual} finalizada.`;
+        definirAnimacaoEqualizador(false);
+        document.getElementById("status-audio").textContent = `✅ Leitura da Página ${paginaAtual} concluída.`;
+
+        const autoAvancar = document.getElementById("auto-avancar");
+        if (autoAvancar && autoAvancar.checked && paginaAtual < totalPaginas) {
+            carregarPagina(paginaAtual + 1, true);
+        }
     };
 
     falaAtual.onerror = () => {
-        document.getElementById("status-audio").textContent = "Leitura interrompida.";
+        definirAnimacaoEqualizador(false);
+        document.getElementById("status-audio").textContent = "Narração pausada ou interrompida.";
     };
 
     synth.speak(falaAtual);
@@ -134,12 +186,14 @@ function pausarOuRetomarAudio() {
 
     if (synth.speaking && !synth.paused) {
         synth.pause();
+        definirAnimacaoEqualizador(false);
         btnPause.textContent = "▶️ Retomar";
         statusAudio.textContent = "⏸️ Audiobook pausado";
     } else if (synth.paused) {
         synth.resume();
+        definirAnimacaoEqualizador(true);
         btnPause.textContent = "⏸️ Pausar";
-        statusAudio.textContent = `🔊 Lendo a Página ${paginaAtual} em voz alta...`;
+        statusAudio.textContent = `🔊 Narrando a Página ${paginaAtual} em voz alta...`;
     }
 }
 
@@ -147,8 +201,9 @@ function pararAudiobook() {
     if (synth.speaking || synth.paused) {
         synth.cancel();
     }
+    definirAnimacaoEqualizador(false);
     const btnPause = document.getElementById("btn-pause");
     const statusAudio = document.getElementById("status-audio");
     if (btnPause) btnPause.textContent = "⏸️ Pausar";
-    if (statusAudio) statusAudio.textContent = "Pronto para ler a página em voz alta";
+    if (statusAudio) statusAudio.textContent = "Pronto para narrar esta página em Português";
 }
