@@ -1,0 +1,18 @@
+# Variáveis de ambiente e credenciais
+.env
+
+# Cache do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Sistema Operacional (macOS)
+.DS_Store
+
+# Arquivos de upload locais
+uploads/
