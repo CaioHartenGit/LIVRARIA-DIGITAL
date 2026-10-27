@@ -1,84 +1,99 @@
-# 📚 Livraria Digital API
+# ✨ LuminaBooks — Reading & Audiobook Studio
 
-API RESTful completa para gerenciamento de uma **Biblioteca e Livraria Digital**, desenvolvida com **Python 3.14**, **FastAPI**, **Pydantic v2**, **PostgreSQL** e **pypdf**.
+Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**, desenvolvida com **Python 3.14**, **FastAPI**, **Pydantic v2**, **PostgreSQL** e **pypdf** no Backend, e uma interface moderna modular em **HTML5, CSS3 (Glassmorphism) e JavaScript (Web Speech API)** no Front-end.
 
-O sistema permite o cadastro de usuários com controle de acesso (**RBAC**), upload real de livros em formato **PDF** (com contagem automática de páginas), extração inteligente do texto página a página (preparado para leitura e **Audiobook**) e acompanhamento completo do **Progresso de Leitura** de cada usuário.
+O **LuminaBooks** permite o cadastro e login de usuários com controle de acesso (**RBAC**), upload real de livros em formato **PDF** (com contagem automática de páginas), extração inteligente do texto página a página, **Player de Audiobook (`LuminaVox`) com equalizador animado e auto-avanço de páginas**, temas de leitura (*Noturno, Sépia Kindle e Claro*) e sincronização em tempo real do **Progresso de Leitura** no PostgreSQL.
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
-* **Linguagem:** Python 3.14
-* **Framework Web:** FastAPI + Uvicorn
+* **Backend:** Python 3.14 + FastAPI + Uvicorn
 * **Validação de Dados (DTOs):** Pydantic v2
 * **Banco de Dados:** PostgreSQL (`psycopg` v3 com `dict_row`)
 * **Segurança & Configuração:** Variáveis de ambiente com `python-dotenv` (`.env` / `.env.example`)
-* **Processamento de PDF & Audiobook:** `pypdf` (`PdfReader`) + `python-multipart`
+* **Processamento de PDF:** `pypdf` (`PdfReader`) + `python-multipart`
+* **Front-end & Audiobook:** HTML5, CSS3 Modular (`style-layout`, `style-components`, `style-pages`), JavaScript ES6+ e `Web Speech API` (TTS em Português)
 
 ---
 
 ## 🏗️ Arquitetura do Projeto
 
-O projeto foi construído aplicando **Arquitetura em Camadas (Layered / Clean Architecture)**, garantindo separação clara de responsabilidades e tratamento centralizado de regras de negócio:
+O projeto aplica **Arquitetura em Camadas (Layered / Clean Architecture)** no Backend integrada a um **Front-end Modular**:
 
 ```text
-Router (FastAPI) ──► Service (Regras de Negócio) ──► Repository (SQL / PostgreSQL) ──► Entity (Domínio)
+Front-end (LuminaBooks UI) ──► Router (FastAPI) ──► Service (Regras) ──► Repository (SQL) ──► PostgreSQL
 ```
 
 ### Estrutura de Diretórios
 
 ```text
-LIVRARIA_DIGITAL/
-├── main.py                              # Ponto de entrada da aplicação FastAPI
+LUMINABOOKS/
+├── main.py                              # Ponto de entrada da API FastAPI + CORS + StaticFiles
 ├── .env                                 # Variáveis de ambiente locais (ignorado pelo Git)
-├── .env.example                         # Modelo de variáveis de ambiente para configuração
-├── .gitignore                           # Proteção de credenciais, cache e arquivos locais
-├── README.md                            # Documentação do projeto
+├── .env.example                         # Modelo público de variáveis de ambiente
+├── .gitignore                           # Proteção de credenciais, cache e uploads locais
+├── README.md                            # Documentação completa do projeto
 ├── uploads/                             # Diretório onde os PDFs enviados são armazenados
+├── frontend/                            # Interface Visual LuminaBooks & Audiobook Studio
+│   ├── index.html                       # Tela Split-Screen de Login e Cadastro
+│   ├── livros.html                      # Dashboard de Estatísticas, Estante 3D e Upload de PDF
+│   ├── leitor.html                      # Leitor Estilo Kindle (Noturno/Sépia/Claro) + LuminaVox Player
+│   ├── css/
+│   │   ├── style-layout.css             # Variáveis globais, tipografia, Navbar, Containers e Grids
+│   │   ├── style-components.css         # Botões, Inputs, Cards 3D, Barra de Progresso e Modais
+│   │   └── style-pages.css              # Estilos específicos de cada tela, temas Kindle e equalizador
+│   └── js/
+│       ├── auth.js                      # Autenticação e sessão do usuário
+│       ├── livros.js                    # Catálogo, filtros, estatísticas e envio de PDF
+│       └── leitor.js                    # Leitura de páginas, sincronização de progresso e voz TTS
 └── apps/
     ├── database/
-    │   └── conexao.py                   # Conexão segura com o PostgreSQL via variáveis de ambiente
+    │   └── conexao.py                   # Conexão segura com o PostgreSQL via .env
     ├── entities/
     │   ├── livro.py                     # Entidade Livro com encapsulamento (@property/@setter)
     │   ├── usuario.py                   # Entidade Usuario com validações de domínio
     │   └── progresso.py                 # Entidade Progresso com validações de tipos e datas
     ├── schemas/
     │   ├── livro_schemas.py             # Schemas Pydantic (LivroCreate, LivroResponse)
-    │   ├── usuario_schemas.py           # Schemas Pydantic (UsuarioCreate, UsuarioResponse)
+    │   ├── usuario_schemas.py           # Schemas Pydantic (UsuarioCreate, UsuarioLogin, UsuarioResponse)
     │   └── progresso_schemas.py         # Schemas Pydantic (ProgressoCreate, ProgressoUpdate, ProgressoResponse)
     ├── repository/
     │   ├── livro_repository.py          # Queries SQL da tabela livro
     │   ├── usuario_repository.py        # Queries SQL da tabela usuario
     │   └── progresso_repository.py      # Queries SQL da tabela progresso
     ├── services/
-    │   ├── livro_service.py             # Regras de negócio de livros e leitura de páginas com pypdf
-    │   ├── usuario_service.py           # Regras de negócio de usuários e permissões RBAC
+    │   ├── livro_service.py             # Regras de negócio de livros e extração de páginas com pypdf
+    │   ├── usuario_service.py           # Regras de negócio de usuários, login e permissões RBAC
     │   └── progresso_service.py         # Regras cruzadas entre Usuário, Livro e Progresso
     └── routers/
         ├── livro_routers.py             # Rotas HTTP de livros, upload de PDF e leitura de página
-        ├── usuario_routers.py           # Rotas HTTP de usuários e administração
+        ├── usuario_routers.py           # Rotas HTTP de login, cadastro e administração
         └── progresso_routers.py         # Rotas HTTP de progresso de leitura
 ```
 
 ---
 
-## ⚙️ Funcionalidades Implementadas
+## ⚙️ Funcionalidades Completas
 
-### 1. 📖 Módulo de Livros, Upload Real de PDF & Audiobook
-* **Upload Real de PDF (`UploadFile`):** Ao cadastrar um livro, o usuário envia o arquivo `.pdf` diretamente pelo formulário da API. O arquivo é salvo automaticamente na pasta `uploads/`.
-* **Contagem Automática de Páginas (`pypdf`):** O sistema abre o PDF enviado utilizando o `PdfReader` e calcula automaticamente o `total_paginas` antes de gravar no banco de dados.
-* **Leitura de Página para Audiobook:** Rota dedicada que extrai o texto exato de qualquer página do livro (`leitor.pages[pagina - 1].extract_text()`), permitindo exibir o texto na tela e alimentar a leitura em voz alta (**Audiobook**).
+### 1. 🎨 Interface LuminaBooks & LuminaVox Audiobook Studio
+* **Tela Split-Screen de Autenticação (`index.html`):** Vitrine interativa da plataforma e acesso rápido de Login/Cadastro.
+* **Dashboard de Estatísticas & Estante 3D (`livros.html`):** Exibe contadores em tempo real (*Obras no Acervo*, *Em Leitura*, *Livros Concluídos* e *Total de Páginas Lidas*), filtros por status (*Todos*, *Lendo Agora*, *Concluídos*) e capas estilizadas.
+* **Leitor Estilo Kindle (`leitor.html`):** Alternância entre temas **🌙 Noturno**, **📜 Sépia** e **☀️ Claro**, escolha de tipografia (**Livro Serif** ou **Moderna Sans**), controle de tamanho da fonte (`A-` / `A+`) e navegação pelas setas do teclado (`⬅️` / `➡️`).
+* **Player de Audiobook com Auto-Avanço:** Narra o texto extraído do PDF em Português com equalizador animado, controle de velocidade (`0.9x` a `1.5x`) e opção de virar a página automaticamente ao terminar a narração.
 
-### 2. 👤 Módulo de Usuários & Controle de Acesso (RBAC)
-* **Perfis de Acesso (`normal` e `admin`):** Diferenciação entre leitores comuns e administradores diretamente no banco de dados.
-* **Segurança de Dados (DTO):** O `UsuarioResponse` omite a senha em todos os retornos da API.
-* **Rotas Exclusivas para Admin:** Listagem geral de usuários e exclusão de contas validam se o solicitante possui `tipo_usuario == 'admin'` e está ativo.
+### 2. 📖 Módulo de Livros & Upload Real de PDF (`pypdf`)
+* **Upload Real de PDF (`UploadFile`):** Envio do arquivo `.pdf` pela interface ou pelo Swagger, salvo automaticamente em `uploads/`.
+* **Contagem Automática de Páginas:** O `PdfReader` calcula automaticamente o `total_paginas` do PDF no momento do upload.
+* **Extração de Página sob Demanda:** A rota `GET /livros/{id}/pagina/{pagina}` extrai o texto exato da folha solicitada.
 
-### 3. 📈 Módulo de Progresso de Leitura
-* **Relacionamento Único (`Usuário x Livro`):** Cada usuário possui um registro único de progresso por livro (`UNIQUE (usuario_id, livro_id)`).
-* **Validação Cruzada (*Fail-Fast*):** O `ProgressoService` consulta `UsuarioRepository`, `LivroRepository` e `ProgressoRepository` para garantir que usuário e livro existem antes de registrar ou atualizar a leitura.
-* **Trava de Limite de Páginas:** Impede que o usuário informe uma `pagina_atual` maior que o `total_paginas` real do livro.
-* **Conclusão Automática:** Quando `pagina_atual == total_paginas`, o sistema define automaticamente `concluido = True` (e reverte para `False` caso o leitor volte para uma página anterior).
+### 3. 👤 Módulo de Usuários, Login & RBAC
+* **Perfis de Acesso (`normal` e `admin`):** Administradores visualizam o botão de publicar novos PDFs e excluir obras; leitores comuns acessam a estante, progresso e Audiobook.
+* **Proteção de Dados:** O `UsuarioResponse` nunca expõe a senha nos retornos JSON.
+
+### 4. 📈 Módulo de Progresso de Leitura
+* **Sincronização Automática:** Cada virada de página no leitor atualiza automaticamente a `pagina_atual` no PostgreSQL.
+* **Conclusão Inteligente:** Ao alcançar a última página do livro (`pagina_atual == total_paginas`), o livro é marcado automaticamente como `concluido = True`.
 
 ---
 
@@ -137,6 +152,7 @@ CREATE TABLE IF NOT EXISTS progresso (
 ### 👤 Usuários (`/usuarios`)
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
+| `POST` | `/usuarios/login` | Autentica um usuário por e-mail e senha |
 | `POST` | `/usuarios/` | Cadastra um novo usuário |
 | `PUT` | `/usuarios/{id}` | Atualiza os dados de um usuário |
 | `GET` | `/usuarios/admin/{id}` | Lista todos os usuários (exclusivo para administradores) |
@@ -174,5 +190,6 @@ CREATE TABLE IF NOT EXISTS progresso (
    uvicorn main:app --reload
    ```
 
-4. **Acesse a documentação interativa (Swagger UI):**
-   👉 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+4. **Abra o Front-end ou o Swagger:**
+   * **Front-end (LuminaBooks):** Abra o arquivo `frontend/index.html` no seu navegador (`open frontend/index.html`)
+   * **Swagger UI:** Acesse [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
