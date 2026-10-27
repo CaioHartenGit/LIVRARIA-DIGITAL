@@ -1,11 +1,19 @@
 # ✨ LuminaBooks — Reading & Audiobook Studio
 
-🌐 **Acesse a Plataforma Online (Front-end):** [https://luminabokks.netlify.app](https://luminabokks.netlify.app)  
-⚙️ **Documentação da API em Produção (Swagger):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
+🌐 **Acesse a Plataforma Online (Netlify):** [https://luminabooks.netlify.app](https://luminabooks.netlify.app)  
+⚙️ **API em Produção & Swagger UI (Render):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
 
-Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**, desenvolvida com **Python 3.14**, **FastAPI**, **Pydantic v2**, **PostgreSQL (Neon)** e **pypdf** no Backend, e uma interface moderna modular em **HTML5, CSS3 (Glassmorphism) e JavaScript (Web Speech API)** no Front-end.
+Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**, desenvolvida com **Python 3.14**, **FastAPI**, **Pydantic v2**, **PostgreSQL** e **pypdf** no Backend, interface modular em **HTML5, CSS3 (Glassmorphism) e JavaScript (Web Speech API)** no Front-end, e hospedada em nuvem utilizando **Netlify**, **Render** e **Neon Serverless Postgres**.
 
-O **LuminaBooks** permite o cadastro e login de usuários com controle de acesso (**RBAC**), upload real de livros em formato **PDF** (com contagem automática de páginas), extração inteligente do texto página a página, **Player de Audiobook (`LuminaVox`) com equalizador animado e auto-avanço de páginas**, temas de leitura (*Noturno, Sépia Kindle e Claro*) e sincronização em tempo real do **Progresso de Leitura** no PostgreSQL.
+---
+
+## ☁️ Infraestrutura em Nuvem & Deploy (Cloud Stack)
+
+| Camada | Plataforma | Função no Projeto |
+| :--- | :--- | :--- |
+| **Front-end (Web App)** | **Netlify** (`luminabooks.netlify.app`) | Hospedagem global com CDN e deploy contínuo (CI/CD) via GitHub |
+| **Backend (API REST)** | **Render** (`luminabooks.onrender.com`) | Servidor cloud rodando **FastAPI + Uvicorn** em produção |
+| **Banco de Dados** | **Neon.tech** (Serverless PostgreSQL) | Banco de dados relacional PostgreSQL gerenciado na nuvem com SSL |
 
 ---
 
@@ -13,10 +21,11 @@ O **LuminaBooks** permite o cadastro e login de usuários com controle de acesso
 
 * **Backend:** Python 3.14 + FastAPI + Uvicorn
 * **Validação de Dados (DTOs):** Pydantic v2
-* **Banco de Dados:** PostgreSQL (`psycopg` v3 com `dict_row`)
-* **Segurança & Configuração:** Variáveis de ambiente com `python-dotenv` (`.env` / `.env.example`)
+* **Banco de Dados:** PostgreSQL (`psycopg` v3 com `dict_row`) + **Neon Cloud Database**
+* **Segurança & Configuração:** Variáveis de ambiente com `python-dotenv` (`.env` / `.env.example` / `DATABASE_URL`)
 * **Processamento de PDF:** `pypdf` (`PdfReader`) + `python-multipart`
 * **Front-end & Audiobook:** HTML5, CSS3 Modular (`style-layout`, `style-components`, `style-pages`), JavaScript ES6+ e `Web Speech API` (TTS em Português)
+* **Deploy & Cloud:** **Netlify** (Front-end), **Render** (Backend Web Service) e **Neon** (PostgreSQL Cloud)
 
 ---
 
@@ -25,14 +34,16 @@ O **LuminaBooks** permite o cadastro e login de usuários com controle de acesso
 O projeto aplica **Arquitetura em Camadas (Layered / Clean Architecture)** no Backend integrada a um **Front-end Modular**:
 
 ```text
-Front-end (LuminaBooks UI) ──► Router (FastAPI) ──► Service (Regras) ──► Repository (SQL) ──► PostgreSQL
+Front-end (Netlify) ──► Router (FastAPI / Render) ──► Service (Regras) ──► Repository (SQL) ──► PostgreSQL (Neon)
 ```
 
 ### Estrutura de Diretórios
 
 ```text
-LUMINABOOKS/
+LuminaBooks/
 ├── main.py                              # Ponto de entrada da API FastAPI + CORS + StaticFiles
+├── requirements.txt                     # Dependências de produção para o Render
+├── netlify.toml                         # Configuração de publicação automática na Netlify
 ├── .env                                 # Variáveis de ambiente locais (ignorado pelo Git)
 ├── .env.example                         # Modelo público de variáveis de ambiente
 ├── .gitignore                           # Proteção de credenciais, cache e uploads locais
@@ -52,7 +63,7 @@ LUMINABOOKS/
 │       └── leitor.js                    # Leitura de páginas, sincronização de progresso e voz TTS
 └── apps/
     ├── database/
-    │   └── conexao.py                   # Conexão segura com o PostgreSQL via .env
+    │   └── conexao.py                   # Conexão híbrida (Neon DATABASE_URL ou .env local)
     ├── entities/
     │   ├── livro.py                     # Entidade Livro com encapsulamento (@property/@setter)
     │   ├── usuario.py                   # Entidade Usuario com validações de domínio
@@ -86,21 +97,21 @@ LUMINABOOKS/
 * **Player de Audiobook com Auto-Avanço:** Narra o texto extraído do PDF em Português com equalizador animado, controle de velocidade (`0.9x` a `1.5x`) e opção de virar a página automaticamente ao terminar a narração.
 
 ### 2. 📖 Módulo de Livros & Upload Real de PDF (`pypdf`)
-* **Upload Real de PDF (`UploadFile`):** Envio do arquivo `.pdf` pela interface ou pelo Swagger, salvo automaticamente em `uploads/`.
+* **Upload Real de PDF (`UploadFile`):** Envio do arquivo `.pdf` pela interface para todos os usuários (`normal` e `admin`).
 * **Contagem Automática de Páginas:** O `PdfReader` calcula automaticamente o `total_paginas` do PDF no momento do upload.
 * **Extração de Página sob Demanda:** A rota `GET /livros/{id}/pagina/{pagina}` extrai o texto exato da folha solicitada.
 
 ### 3. 👤 Módulo de Usuários, Login & RBAC
-* **Perfis de Acesso (`normal` e `admin`):** Administradores visualizam o botão de publicar novos PDFs e excluir obras; leitores comuns acessam a estante, progresso e Audiobook.
+* **Perfis de Acesso (`normal` e `admin`):** Qualquer usuário autenticado pode publicar PDFs e ler livros; administradores possuem acesso exclusivo ao **Painel de Usuários (`GET /usuarios/admin/{id}`)** para listar e gerenciar todas as contas cadastradas.
 * **Proteção de Dados:** O `UsuarioResponse` nunca expõe a senha nos retornos JSON.
 
 ### 4. 📈 Módulo de Progresso de Leitura
-* **Sincronização Automática:** Cada virada de página no leitor atualiza automaticamente a `pagina_atual` no PostgreSQL.
+* **Sincronização Automática:** Cada virada de página no leitor atualiza automaticamente a `pagina_atual` no PostgreSQL (Neon).
 * **Conclusão Inteligente:** Ao alcançar a última página do livro (`pagina_atual == total_paginas`), o livro é marcado automaticamente como `concluido = True`.
 
 ---
 
-## 🗄️ Modelagem do Banco de Dados (PostgreSQL)
+## 🗄️ Modelagem do Banco de Dados (PostgreSQL / Neon)
 
 ```sql
 -- 1. Tabela de Livros
@@ -171,15 +182,15 @@ CREATE TABLE IF NOT EXISTS progresso (
 
 ---
 
-## ▶️ Como Executar o Projeto
+## ▶️ Como Executar Localmente
 
 1. **Instale as dependências:**
    ```bash
-   pip3 install fastapi uvicorn "psycopg[binary]" pypdf python-multipart python-dotenv
+   pip3 install -r requirements.txt
    ```
 
 2. **Configure as variáveis de ambiente (`.env`):**
-   Crie um arquivo `.env` na raiz do projeto com base no `.env.example`:
+   Crie um arquivo `.env` na raiz do projeto com base no `.env.example` (ou informe a `DATABASE_URL` do **Neon**):
    ```env
    DB_NAME=LIVRARIA-DIGITAL
    DB_USER=postgres
@@ -193,6 +204,6 @@ CREATE TABLE IF NOT EXISTS progresso (
    uvicorn main:app --reload
    ```
 
-4. **Abra o Front-end ou o Swagger:**
-   * **Front-end (LuminaBooks):** Abra o arquivo `frontend/index.html` no seu navegador (`open frontend/index.html`)
-   * **Swagger UI:** Acesse [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+4. **Acesse a aplicação:**
+   * **Produção (Netlify):** [https://luminabooks.netlify.app](https://luminabooks.netlify.app)
+   * **API Swagger (Render):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
