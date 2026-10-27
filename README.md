@@ -1,6 +1,6 @@
 # ✨ LuminaBooks — Reading & Audiobook Studio
 
-🌐 **Acesse a Plataforma Online (Netlify):** [https://luminabooks.netlify.app](https://luminabooks.netlify.app)  
+🌐 **Acesse a Plataforma Online (Netlify):** [https://luminabokks.netlify.app](https://luminabokks.netlify.app)  
 ⚙️ **API em Produção & Swagger UI (Render):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
 
 Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**, desenvolvida com **Python 3.14**, **FastAPI**, **Pydantic v2**, **PostgreSQL** e **pypdf** no Backend, interface modular em **HTML5, CSS3 (Glassmorphism) e JavaScript (Web Speech API)** no Front-end, e hospedada em nuvem utilizando **Netlify**, **Render** e **Neon Serverless Postgres**.
@@ -11,7 +11,7 @@ Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**
 
 | Camada | Plataforma | Função no Projeto |
 | :--- | :--- | :--- |
-| **Front-end (Web App)** | **Netlify** (`luminabooks.netlify.app`) | Hospedagem global com CDN e deploy contínuo (CI/CD) via GitHub |
+| **Front-end (Web App)** | **Netlify** (`luminabokks.netlify.app`) | Hospedagem global com CDN e deploy contínuo (CI/CD) via GitHub |
 | **Backend (API REST)** | **Render** (`luminabooks.onrender.com`) | Servidor cloud rodando **FastAPI + Uvicorn** em produção |
 | **Banco de Dados** | **Neon.tech** (Serverless PostgreSQL) | Banco de dados relacional PostgreSQL gerenciado na nuvem com SSL |
 
@@ -205,5 +205,5 @@ CREATE TABLE IF NOT EXISTS progresso (
    ```
 
 4. **Acesse a aplicação:**
-   * **Produção (Netlify):** [https://luminabooks.netlify.app](https://luminabooks.netlify.app)
+   * **Produção (Netlify):** [https://luminabokks.netlify.app](https://luminabokks.netlify.app)
    * **API Swagger (Render):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
