@@ -1,5 +1,7 @@
 from apps.schemas.livro_schemas import LivroCreate
-
+# pyrefly: ignore[missing-import]
+from pypdf import PdfReader
+import os
 class LivroService:
     def __init__(self, livro_repository):
         self.livro_repository = livro_repository
@@ -41,3 +43,23 @@ class LivroService:
         if delete is None:
             raise ValueError("ID do livro não existe para ser deletado")
         return delete
+
+    
+    def ler_pagina_livro(self,id,pagina):
+        livro = self.livro_repository.buscar_livro_por_id(id)
+        if livro is None:
+            raise ValueError("ID do livro não existe")
+        if pagina < 1 or pagina > livro["total_paginas"]:
+            raise ValueError("Número de página inválido para este livro")
+        if not os.path.exists(livro["arquivo_path"]):
+            raise ValueError("Arquivo do livro não encontrado")
+    
+        leitor = PdfReader(livro["arquivo_path"])
+        texto = leitor.pages[pagina - 1].extract_text()
+        return {
+                "id_livro": livro["id"],
+                "titulo": livro["titulo"],
+                "pagina_atual": pagina,
+                "total_paginas": livro["total_paginas"],
+                "texto": texto
+                }
