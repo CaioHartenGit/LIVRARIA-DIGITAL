@@ -1,4 +1,3 @@
-from asyncio import base_futures
 from apps.database.conexao import Conectar
 from psycopg.rows import dict_row
 
