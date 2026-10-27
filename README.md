@@ -12,6 +12,7 @@ O sistema permite o cadastro de usuários com controle de acesso (**RBAC**), upl
 * **Framework Web:** FastAPI + Uvicorn
 * **Validação de Dados (DTOs):** Pydantic v2
 * **Banco de Dados:** PostgreSQL (`psycopg` v3 com `dict_row`)
+* **Segurança & Configuração:** Variáveis de ambiente com `python-dotenv` (`.env` / `.env.example`)
 * **Processamento de PDF & Audiobook:** `pypdf` (`PdfReader`) + `python-multipart`
 
 ---
@@ -29,11 +30,14 @@ Router (FastAPI) ──► Service (Regras de Negócio) ──► Repository (SQ
 ```text
 LIVRARIA_DIGITAL/
 ├── main.py                              # Ponto de entrada da aplicação FastAPI
+├── .env                                 # Variáveis de ambiente locais (ignorado pelo Git)
+├── .env.example                         # Modelo de variáveis de ambiente para configuração
+├── .gitignore                           # Proteção de credenciais, cache e arquivos locais
 ├── README.md                            # Documentação do projeto
 ├── uploads/                             # Diretório onde os PDFs enviados são armazenados
 └── apps/
     ├── database/
-    │   └── conexao.py                   # Conexão com o banco de dados PostgreSQL
+    │   └── conexao.py                   # Conexão segura com o PostgreSQL via variáveis de ambiente
     ├── entities/
     │   ├── livro.py                     # Entidade Livro com encapsulamento (@property/@setter)
     │   ├── usuario.py                   # Entidade Usuario com validações de domínio
@@ -152,10 +156,18 @@ CREATE TABLE IF NOT EXISTS progresso (
 
 1. **Instale as dependências:**
    ```bash
-   pip3 install fastapi uvicorn "psycopg[binary]" pypdf python-multipart
+   pip3 install fastapi uvicorn "psycopg[binary]" pypdf python-multipart python-dotenv
    ```
 
-2. **Configure a conexão com o PostgreSQL** em `apps/database/conexao.py`.
+2. **Configure as variáveis de ambiente (`.env`):**
+   Crie um arquivo `.env` na raiz do projeto com base no `.env.example`:
+   ```env
+   DB_NAME=LIVRARIA-DIGITAL
+   DB_USER=postgres
+   DB_PASSWORD=sua_senha_aqui
+   DB_HOST=localhost
+   DB_PORT=5432
+   ```
 
 3. **Inicie o servidor FastAPI:**
    ```bash
