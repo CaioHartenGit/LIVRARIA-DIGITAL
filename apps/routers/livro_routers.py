@@ -1,4 +1,7 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, UploadFile, File, Form
+import os
+# pyrefly: ignore[missing-import]
+from pypdf import PdfReader
 from apps.schemas.livro_schemas import LivroCreate, LivroResponse
 from apps.repository.livro_repository import LivroRepository
 from apps.services.livro_service import LivroService
@@ -9,15 +12,31 @@ livro_service = LivroService(livro_repository)
 
 router = APIRouter(prefix = "/livros", tags = ["Livros"])
 
-# Criando Livros
+# Criando Livros (com Upload Real de PDF)
 @router.post("/", status_code = status.HTTP_201_CREATED, response_model = LivroResponse)
-def cadastrar_livros(livro_data: LivroCreate):
+def cadastrar_livros(
+    titulo: str = Form(...),
+    autor: str = Form(...),
+    arquivo: UploadFile = File(...)
+):
     try:
+        if not arquivo.filename.endswith(".pdf"):
+            raise ValueError("O arquivo enviado deve ser um PDF")
+
+        os.makedirs("uploads", exist_ok = True)
+        caminho_arquivo = f"uploads/{arquivo.filename}"
+
+        with open(caminho_arquivo, "wb") as buffer:
+            buffer.write(arquivo.file.read())
+
+        leitor = PdfReader(caminho_arquivo)
+        total_paginas = len(leitor.pages)
+
         cadastro_livro = livro_service.cadastrar(
-            livro_data.titulo,
-            livro_data.autor,
-            livro_data.total_paginas,
-            livro_data.arquivo_path
+            titulo,
+            autor,
+            total_paginas,
+            caminho_arquivo
         )
         return cadastro_livro
     except ValueError as erro:
@@ -90,3 +109,16 @@ def deletar_livro(id: int):
             status_code = status.HTTP_400_BAD_REQUEST,
             detail = str(erro)
         )
+
+# Ler Pagina (AUDIOBOOK)
+@router.get("/{id}/pagina/{pagina}", response_model = dict, status_code = 200)
+def ler_pagina(id: int, pagina: int):
+    try:
+        pagina_lida = livro_service.ler_pagina_livro(id, pagina)
+        return pagina_lida
+    except ValueError as erro:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail = str(erro)
+        )
+    
