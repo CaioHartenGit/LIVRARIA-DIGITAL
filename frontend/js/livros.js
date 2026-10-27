@@ -13,9 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const userInfo = document.getElementById("user-info");
     userInfo.innerHTML = `👤 <strong>${usuarioLogado.nome}</strong> <span class="role-tag">${usuarioLogado.tipo_usuario}</span>`;
 
-    const btnNovoLivro = document.getElementById("btn-novo-livro");
-    if (usuarioLogado.tipo_usuario !== "admin") {
-        btnNovoLivro.style.display = "none";
+    // O botão de Upload de PDF fica liberado tanto para 'normal' quanto para 'admin'
+    // A diferença é que o 'admin' visualiza o botão exclusivo de listar todos os usuários
+    const btnAdminUsuarios = document.getElementById("btn-admin-usuarios");
+    if (usuarioLogado.tipo_usuario === "admin" && btnAdminUsuarios) {
+        btnAdminUsuarios.style.display = "inline-flex";
     }
 
     carregarAcervo();
@@ -288,5 +290,59 @@ async function deletarLivro(id) {
         }
     } catch (erro) {
         alert("Erro ao excluir livro");
+    }
+}
+
+// ==================== PAINEL EXCLUSIVO DE ADMIN: LISTAR USUÁRIOS ====================
+
+async function abrirModalUsuariosAdmin() {
+    const modal = document.getElementById("modal-usuarios-admin");
+    const container = document.getElementById("lista-usuarios-container");
+    modal.classList.add("open");
+    container.innerHTML = "<p style='color: var(--text-muted);'>Consultando usuários no banco...</p>";
+
+    try {
+        const resp = await fetch(`${API_URL}/usuarios/admin/${usuarioLogado.id}`);
+        const usuarios = await resp.json();
+
+        if (!resp.ok || !Array.isArray(usuarios)) {
+            throw new Error(usuarios.detail || "Acesso negado.");
+        }
+
+        container.innerHTML = "";
+        usuarios.forEach((u) => {
+            const item = document.createElement("div");
+            item.style.cssText = "display: flex; align-items: center; justify-content: space-between; background: var(--bg-input); border: 1px solid var(--border-subtle); padding: 12px 16px; border-radius: 12px;";
+            item.innerHTML = `
+                <div>
+                    <strong style="font-size: 0.95rem;">${u.nome}</strong>
+                    <span class="role-tag">${u.tipo_usuario}</span>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">${u.email} (ID: #${u.id})</div>
+                </div>
+                ${u.id !== usuarioLogado.id ? `<button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="deletarUsuarioComoAdmin(${u.id})">Remover</button>` : `<span style="font-size: 0.78rem; color: var(--accent);">Você</span>`}
+            `;
+            container.appendChild(item);
+        });
+    } catch (erro) {
+        container.innerHTML = `<p style="color: var(--danger);">${erro.message}</p>`;
+    }
+}
+
+function fecharModalUsuariosAdmin() {
+    document.getElementById("modal-usuarios-admin").classList.remove("open");
+}
+
+async function deletarUsuarioComoAdmin(idUsuario) {
+    if (!confirm("Deseja realmente excluir este usuário?")) return;
+
+    try {
+        const resp = await fetch(`${API_URL}/usuarios/${usuarioLogado.id}?id_usuario=${idUsuario}`, {
+            method: "DELETE"
+        });
+        if (resp.ok || resp.status === 204) {
+            await abrirModalUsuariosAdmin();
+        }
+    } catch (e) {
+        alert("Erro ao remover usuário.");
     }
 }

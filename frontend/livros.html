@@ -16,6 +16,9 @@
         </a>
         <div class="nav-actions">
             <div class="user-badge" id="user-info">Carregando...</div>
+            <button class="btn btn-outline" id="btn-admin-usuarios" style="display: none;" onclick="abrirModalUsuariosAdmin()">
+                👥 Usuários (Admin)
+            </button>
             <button class="btn btn-primary" id="btn-novo-livro" onclick="abrirModalUpload()">
                 + Upload de Livro (PDF)
             </button>
@@ -79,7 +82,7 @@
         </div>
     </main>
 
-    <!-- Modal de Upload de PDF -->
+    <!-- Modal de Upload de PDF (Disponível para Normal e Admin) -->
     <div class="modal-overlay" id="modal-upload">
         <div class="modal-box">
             <div class="modal-header">
@@ -111,6 +114,25 @@
                     Enviar PDF e Cadastrar Obra
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Exclusivo de Admin: Listar Todos os Usuários -->
+    <div class="modal-overlay" id="modal-usuarios-admin">
+        <div class="modal-box" style="max-width: 600px;">
+            <div class="modal-header">
+                <div>
+                    <h3>👥 Usuários Cadastrados (Painel Admin)</h3>
+                    <p style="font-size: 0.83rem; color: var(--text-muted); margin-top: 4px;">
+                        Listagem exclusiva para administradores do sistema
+                    </p>
+                </div>
+                <button class="btn btn-outline" style="padding: 6px 12px;" onclick="fecharModalUsuariosAdmin()">✕</button>
+            </div>
+
+            <div id="lista-usuarios-container" style="max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                Carregando usuários...
+            </div>
         </div>
     </div>
 
