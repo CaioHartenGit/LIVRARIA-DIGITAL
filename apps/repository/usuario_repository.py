@@ -97,6 +97,27 @@ class UsuarioRepository:
         finally:
             cursor.close()
             conn.close()
+
+    def buscar_por_email_com_senha(self, email):
+        conn = Conectar.conectar()
+        cursor = conn.cursor(row_factory = dict_row)
+
+        try:
+            cursor.execute(
+                '''
+                SELECT id, nome, email, senha, ativo, tipo_usuario
+                FROM usuario
+                WHERE email = %s
+                ''', (email,)
+            )
+            usuario = cursor.fetchone()
+            return usuario
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     # ==================================
 
     def buscar_usuario_por_id(self,id):

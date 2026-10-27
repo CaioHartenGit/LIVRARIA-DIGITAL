@@ -1,8 +1,26 @@
-from apps.schemas.usuario_schemas import UsuarioCreate
+from apps.schemas.usuario_schemas import UsuarioCreate, UsuarioLogin
 
 class UsuarioService:
     def __init__(self, usuario_repository):
         self.usuario_repository = usuario_repository
+
+    def login(self, email, senha):
+        login_data = UsuarioLogin(email=email, senha=senha)
+        usuario = self.usuario_repository.buscar_por_email_com_senha(login_data.email)
+        if not usuario:
+            raise ValueError("Email ou senha inválidos")
+        if not usuario["ativo"]:
+            raise ValueError("Usuário inativo no sistema")
+        if usuario["senha"] != login_data.senha:
+            raise ValueError("Email ou senha inválidos")
+
+        return {
+            "id": usuario["id"],
+            "nome": usuario["nome"],
+            "email": usuario["email"],
+            "ativo": usuario["ativo"],
+            "tipo_usuario": usuario["tipo_usuario"]
+        }
 
     def cadastrar(self, nome, email, senha):
         usuariocriar = UsuarioCreate(nome = nome, email = email, senha = senha)

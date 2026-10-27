@@ -1,5 +1,5 @@
 from fastapi import APIRouter, status, HTTPException
-from apps.schemas.usuario_schemas import UsuarioResponse, UsuarioCreate
+from apps.schemas.usuario_schemas import UsuarioResponse, UsuarioCreate, UsuarioLogin
 from apps.repository.usuario_repository import UsuarioRepository
 from apps.services.usuario_service import UsuarioService
 from typing import List
@@ -8,6 +8,18 @@ usuario_repository = UsuarioRepository()
 usuario_service = UsuarioService(usuario_repository)
 
 router = APIRouter(prefix = "/usuarios", tags = ["Usuarios"])
+
+# Login de Usuario
+@router.post("/login", status_code = status.HTTP_200_OK, response_model = UsuarioResponse)
+def login_usuario(login_data: UsuarioLogin):
+    try:
+        usuario = usuario_service.login(login_data.email, login_data.senha)
+        return usuario
+    except ValueError as erro:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail = str(erro)
+        )
 
 # Criando Usuario
 @router.post("/", status_code = status.HTTP_201_CREATED, response_model = UsuarioResponse)
@@ -69,3 +81,4 @@ def listar_todos_usuarios(id: int):
             status_code = status.HTTP_404_NOT_FOUND,
             detail = str(erro)
         )
+        
