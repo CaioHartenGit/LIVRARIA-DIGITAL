@@ -22,7 +22,7 @@
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     color: var(--text-main);
-    font-size: 0.95rem;
+    font-size: 16px; /* Evita zoom automático no iOS Safari */
     outline: none;
     transition: all 0.2s ease;
 }
@@ -37,10 +37,10 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
+    padding: 12px 18px;
     border-radius: 12px;
     border: 1px solid transparent;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -104,9 +104,9 @@
 .user-badge {
     background-color: rgba(30, 41, 59, 0.65);
     border: 1px solid var(--border-subtle);
-    padding: 8px 16px;
+    padding: 8px 14px;
     border-radius: 999px;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     color: var(--text-muted);
     display: flex;
     align-items: center;
@@ -121,7 +121,7 @@
     color: #c7d2fe;
     padding: 2px 9px;
     border-radius: 999px;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -132,7 +132,7 @@
     background-color: var(--bg-input);
     padding: 5px;
     border-radius: 12px;
-    margin-bottom: 26px;
+    margin-bottom: 24px;
     border: 1px solid var(--border-subtle);
 }
 
@@ -179,8 +179,8 @@
 /* ==================== 3D BOOK CARDS & PROGRESS ==================== */
 .books-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 22px;
 }
 
 .book-card {
@@ -197,14 +197,14 @@
 }
 
 .book-card:hover {
-    transform: translateY(-6px);
+    transform: translateY(-4px);
     border-color: var(--border-highlight);
     box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 25px rgba(99, 102, 241, 0.16);
 }
 
 .book-cover-banner {
-    height: 155px;
-    padding: 20px;
+    height: 145px;
+    padding: 18px;
     position: relative;
     display: flex;
     align-items: flex-end;
@@ -239,14 +239,14 @@
     color: #f8fafc;
     padding: 4px 11px;
     border-radius: 999px;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     font-weight: 700;
 }
 
 .book-cover-title-preview {
     padding-left: 12px;
     font-family: 'Lora', serif;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 600;
     color: #fff;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
@@ -257,7 +257,7 @@
 }
 
 .book-card-body {
-    padding: 20px 22px 22px;
+    padding: 18px 20px 20px;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -265,20 +265,20 @@
 }
 
 .book-title {
-    font-size: 1.12rem;
+    font-size: 1.08rem;
     font-weight: 700;
     margin-bottom: 4px;
     color: var(--text-main);
 }
 
 .book-author {
-    font-size: 0.86rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 .progress-container {
-    margin-bottom: 18px;
+    margin-bottom: 16px;
     background: rgba(15, 23, 42, 0.6);
     padding: 12px 14px;
     border-radius: 12px;
@@ -291,6 +291,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
 }
 
 .progress-bar-bg {
@@ -318,12 +319,12 @@
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(2, 6, 23, 0.78);
+    background-color: rgba(2, 6, 23, 0.82);
     backdrop-filter: blur(8px);
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 16px;
     z-index: 100;
 }
 
@@ -333,15 +334,42 @@
     background-color: var(--bg-card-solid);
     border: 1px solid var(--border-highlight);
     border-radius: var(--radius-lg);
-    padding: 32px;
+    padding: 28px 24px;
     width: 100%;
     max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 22px;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* ==================== RESPONSIVO MOBILE (COMPONENTS) ==================== */
+@media (max-width: 768px) {
+    .btn {
+        padding: 10px 14px;
+        font-size: 0.84rem;
+    }
+
+    .user-badge {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        justify-content: center;
+    }
+
+    .books-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .modal-box {
+        padding: 22px 18px;
+        border-radius: 18px;
+    }
 }
