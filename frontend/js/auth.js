@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://luminabooks.onrender.com";
 
 function mostrarAlerta(mensagem, tipo = "error") {
     const alertBox = document.getElementById("alert-box");
