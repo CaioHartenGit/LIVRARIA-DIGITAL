@@ -1,6 +1,9 @@
 # ✨ LuminaBooks — Reading & Audiobook Studio
 
-Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**, desenvolvida com **Python 3.14**, **FastAPI**, **Pydantic v2**, **PostgreSQL** e **pypdf** no Backend, e uma interface moderna modular em **HTML5, CSS3 (Glassmorphism) e JavaScript (Web Speech API)** no Front-end.
+🌐 **Acesse a Plataforma Online (Front-end):** [https://luminabokks.netlify.app](https://luminabokks.netlify.app)  
+⚙️ **Documentação da API em Produção (Swagger):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
+
+Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**, desenvolvida com **Python 3.14**, **FastAPI**, **Pydantic v2**, **PostgreSQL (Neon)** e **pypdf** no Backend, e uma interface moderna modular em **HTML5, CSS3 (Glassmorphism) e JavaScript (Web Speech API)** no Front-end.
 
 O **LuminaBooks** permite o cadastro e login de usuários com controle de acesso (**RBAC**), upload real de livros em formato **PDF** (com contagem automática de páginas), extração inteligente do texto página a página, **Player de Audiobook (`LuminaVox`) com equalizador animado e auto-avanço de páginas**, temas de leitura (*Noturno, Sépia Kindle e Claro*) e sincronização em tempo real do **Progresso de Leitura** no PostgreSQL.
 
