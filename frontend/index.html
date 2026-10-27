@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livraria Digital — Acesso</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="brand-header">
+                <span class="brand-logo">📚</span>
+                <h1>Livraria Digital</h1>
+                <p>Sua plataforma de leitura interativa e Audiobook</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button type="button" class="tab-btn active" id="tab-login" onclick="alternarAba('login')">Entrar</button>
+                <button type="button" class="tab-btn" id="tab-cadastro" onclick="alternarAba('cadastro')">Criar Conta</button>
+            </div>
+
+            <div id="alert-box" class="alert-box"></div>
+
+            <!-- Formulário de Login -->
+            <form id="form-login" onsubmit="realizarLogin(event)">
+                <div class="form-group">
+                    <label for="login-email">E-mail</label>
+                    <input type="email" id="login-email" placeholder="seu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-senha">Senha</label>
+                    <input type="password" id="login-senha" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Entrar na Biblioteca</button>
+            </form>
+
+            <!-- Formulário de Cadastro -->
+            <form id="form-cadastro" style="display: none;" onsubmit="realizarCadastro(event)">
+                <div class="form-group">
+                    <label for="cad-nome">Nome completo</label>
+                    <input type="text" id="cad-nome" placeholder="Ex: Caio Harten" minlength="3" required>
+                </div>
+                <div class="form-group">
+                    <label for="cad-email">E-mail</label>
+                    <input type="email" id="cad-email" placeholder="seu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="cad-senha">Senha</label>
+                    <input type="password" id="cad-senha" placeholder="Mínimo 3 caracteres" minlength="3" required>
+                </div>
+                <button type="submit" class="btn btn-accent btn-full">Cadastrar Conta</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>
