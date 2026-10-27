@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livraria Digital — Leitor & Audiobook</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="livros.html" class="nav-brand">
+            <span>⬅️</span>
+            <span>Voltar para a Estante</span>
+        </a>
+        <div class="nav-actions">
+            <div class="user-badge" id="leitor-progresso-badge">Carregando...</div>
+        </div>
+    </nav>
+
+    <main class="reader-layout">
+        <!-- Cabeçalho do Livro -->
+        <div class="reader-top-bar">
+            <div>
+                <h2 id="titulo-livro">Carregando livro...</h2>
+                <p id="subtitulo-pagina" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
+                    Página -- de --
+                </p>
+            </div>
+            <div style="min-width: 220px;">
+                <div class="book-meta">
+                    <span id="status-conclusao">Em leitura</span>
+                    <strong id="porcentagem-leitura">0%</strong>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="barra-progresso" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel do Audiobook (TTS em Português) -->
+        <div class="audiobook-panel">
+            <div class="audiobook-info">
+                <span style="font-size: 1.8rem;">🎧</span>
+                <div>
+                    <strong>Modo Audiobook (Leitor de Voz)</strong>
+                    <div class="audiobook-status" id="status-audio">Pronto para ler a página em voz alta</div>
+                </div>
+            </div>
+            <div class="audiobook-controls">
+                <select id="velocidade-voz" class="speed-select" title="Velocidade da leitura">
+                    <option value="0.9">0.9x</option>
+                    <option value="1" selected>1.0x (Normal)</option>
+                    <option value="1.25">1.25x (Rápido)</option>
+                    <option value="1.5">1.5x (Turbo)</option>
+                </select>
+                <button class="btn btn-accent" id="btn-play" onclick="iniciarAudiobook()">▶️ Ouvir Página</button>
+                <button class="btn btn-outline" id="btn-pause" onclick="pausarOuRetomarAudio()">⏸️ Pausar</button>
+                <button class="btn btn-danger" onclick="pararAudiobook()">⏹️ Parar</button>
+            </div>
+        </div>
+
+        <!-- Folha de Leitura do PDF -->
+        <article class="page-paper" id="conteudo-pagina">
+            Carregando texto da página...
+        </article>
+
+        <!-- Paginação Sincronizada com o Banco -->
+        <div class="reader-pagination">
+            <button class="btn btn-outline" id="btn-anterior" onclick="mudarPagina(-1)">
+                ⬅️ Página Anterior
+            </button>
+            <span id="indicador-pagina" style="font-weight: 600;">Página 1</span>
+            <button class="btn btn-primary" id="btn-proxima" onclick="mudarPagina(1)">
+                Próxima Página ➡️
+            </button>
+        </div>
+    </main>
+
+    <script src="js/leitor.js"></script>
+</body>
+</html>
