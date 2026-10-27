@@ -23,3 +23,8 @@ class LivroResponse(BaseModel):
     arquivo_path: str
     ativo: bool
 
+
+
+
+
+
