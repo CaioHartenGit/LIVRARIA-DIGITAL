@@ -421,6 +421,30 @@
     border-color: #e2e8f0;
 }
 
+/* Container Visual de Mangá / Página de Imagem */
+.manga-viewer {
+    background-color: #090d16;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    min-height: 480px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.manga-viewer img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.65);
+    transition: transform 0.25s ease;
+}
+
 .reader-pagination {
     display: flex;
     align-items: center;

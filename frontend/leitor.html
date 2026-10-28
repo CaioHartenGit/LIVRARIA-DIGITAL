@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuminaBooks — Leitor & Audiobook Studio</title>
+    <title>LuminaBooks — Leitor, Mangá & Audiobook Studio</title>
     <link rel="stylesheet" href="css/style-layout.css">
     <link rel="stylesheet" href="css/style-components.css">
     <link rel="stylesheet" href="css/style-pages.css">
@@ -70,28 +70,33 @@
             </div>
         </div>
 
-        <!-- Barra de Personalização Visual (Estilo Kindle) -->
+        <!-- Barra de Modo de Exibição (Texto Kindle vs Mangá / Imagem) e Aparência -->
         <div class="reader-toolbar">
             <div class="toolbar-group">
-                <span class="toolbar-label">Tema:</span>
-                <button class="chip-btn active" id="tema-dark" onclick="mudarTemaPapel('dark')">🌙 Noturno</button>
-                <button class="chip-btn" id="tema-sepia" onclick="mudarTemaPapel('sepia')">📜 Sépia</button>
-                <button class="chip-btn" id="tema-light" onclick="mudarTemaPapel('light')">☀️ Claro</button>
+                <span class="toolbar-label">Modo:</span>
+                <button class="chip-btn active" id="modo-texto" onclick="alternarModoVisualizacao('texto')">📝 Texto (Kindle)</button>
+                <button class="chip-btn" id="modo-imagem" onclick="alternarModoVisualizacao('imagem')">🎌 Mangá / Imagem</button>
             </div>
 
-            <div class="toolbar-group">
-                <span class="toolbar-label">Fonte:</span>
-                <button class="chip-btn" id="fonte-sans" onclick="mudarFonte('sans')">Moderna</button>
-                <button class="chip-btn active" id="fonte-serif" onclick="mudarFonte('serif')">Livro (Serif)</button>
+            <div class="toolbar-group" id="controles-texto-kindle">
+                <span class="toolbar-label">Tema:</span>
+                <button class="chip-btn active" id="tema-dark" onclick="mudarTemaPapel('dark')">🌙</button>
+                <button class="chip-btn" id="tema-sepia" onclick="mudarTemaPapel('sepia')">📜</button>
+                <button class="chip-btn" id="tema-light" onclick="mudarTemaPapel('light')">☀️</button>
                 <button class="chip-btn" onclick="ajustarTamanhoFonte(-0.08)">A-</button>
                 <button class="chip-btn" onclick="ajustarTamanhoFonte(0.08)">A+</button>
             </div>
         </div>
 
-        <!-- Folha de Leitura do Livro -->
+        <!-- Folha de Leitura de Texto (Modo Kindle) -->
         <article class="page-paper font-serif" id="conteudo-pagina">
-            Carregando texto da página...
+            Carregando página...
         </article>
+
+        <!-- Visualizador Gráfico de Página (Modo Mangá / PDF com Imagem) -->
+        <section class="manga-viewer" id="container-manga">
+            <img id="imagem-pagina-pdf" src="" alt="Página do Livro / Mangá" />
+        </section>
 
         <!-- Paginação Sincronizada com o Banco -->
         <div class="reader-pagination">

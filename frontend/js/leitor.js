@@ -10,6 +10,8 @@ const livroId = parseInt(params.get("livro_id"));
 let paginaAtual = parseInt(params.get("pagina")) || 1;
 let totalPaginas = 1;
 let textoAtual = "";
+let imagemAtual = "";
+let modoExibicao = "auto"; // "texto" | "imagem" | "auto"
 let tamanhoFonteRem = 1.14;
 
 const synth = window.speechSynthesis;
@@ -35,11 +37,39 @@ window.addEventListener("beforeunload", () => {
     }
 });
 
+function alternarModoVisualizacao(modo) {
+    modoExibicao = modo;
+    atualizarExibicaoTela(modo);
+}
+
+function atualizarExibicaoTela(modoEfetivo) {
+    const folhaTexto = document.getElementById("conteudo-pagina");
+    const containerManga = document.getElementById("container-manga");
+    const controlesKindle = document.getElementById("controles-texto-kindle");
+    const btnTexto = document.getElementById("modo-texto");
+    const btnImagem = document.getElementById("modo-imagem");
+
+    if (modoEfetivo === "imagem") {
+        folhaTexto.style.display = "none";
+        containerManga.style.display = "flex";
+        if (controlesKindle) controlesKindle.style.opacity = "0.4";
+        btnTexto.classList.remove("active");
+        btnImagem.classList.add("active");
+    } else {
+        folhaTexto.style.display = "block";
+        containerManga.style.display = "none";
+        if (controlesKindle) controlesKindle.style.opacity = "1";
+        btnTexto.classList.add("active");
+        btnImagem.classList.remove("active");
+    }
+}
+
 async function carregarPagina(numeroPagina, iniciarAudioAutomatico = false) {
     pararAudiobook();
 
     const conteudoEl = document.getElementById("conteudo-pagina");
-    conteudoEl.textContent = "Extraindo texto da página do PDF...";
+    const imgEl = document.getElementById("imagem-pagina-pdf");
+    conteudoEl.textContent = "Carregando página do PDF...";
 
     try {
         const resp = await fetch(`${API_URL}/livros/${livroId}/pagina/${numeroPagina}`);
@@ -52,14 +82,32 @@ async function carregarPagina(numeroPagina, iniciarAudioAutomatico = false) {
         paginaAtual = dados.pagina_atual;
         totalPaginas = dados.total_paginas;
         textoAtual = (dados.texto || "").trim();
+        imagemAtual = dados.imagem_base64 || "";
 
         document.getElementById("titulo-livro").textContent = dados.titulo;
         document.getElementById("subtitulo-pagina").textContent = `Página ${paginaAtual} de ${totalPaginas}`;
         document.getElementById("indicador-pagina").textContent = `Página ${paginaAtual} de ${totalPaginas}`;
 
-        conteudoEl.textContent = textoAtual.length > 0
-            ? textoAtual
-            : "[Esta página do PDF não possui texto selecionável ou contém apenas ilustrações.]";
+        if (imagemAtual) {
+            imgEl.src = imagemAtual;
+        }
+
+        if (textoAtual.length > 0) {
+            conteudoEl.textContent = textoAtual;
+        } else {
+            conteudoEl.textContent = "[Esta página é uma ilustração / Mangá. Clique em '🎌 Mangá / Imagem' acima para visualizar a arte original!]";
+        }
+
+        // Detecção automática inteligente: se não houver texto digitado (ex: Mangá/HQ), exibe direto a imagem da página!
+        if (modoExibicao === "auto") {
+            if (textoAtual.length === 0 && imagemAtual) {
+                atualizarExibicaoTela("imagem");
+            } else {
+                atualizarExibicaoTela("texto");
+            }
+        } else {
+            atualizarExibicaoTela(modoExibicao);
+        }
 
         document.getElementById("btn-anterior").disabled = paginaAtual <= 1;
         document.getElementById("btn-proxima").disabled = paginaAtual >= totalPaginas;
@@ -80,7 +128,7 @@ async function salvarProgressoNoBanco(pagina) {
 
     document.getElementById("porcentagem-leitura").textContent = `${porcentagem}%`;
     document.getElementById("barra-progresso").style.width = `${porcentagem}%`;
-    document.getElementById("status-conclusao").textContent = concluido ? "✅ Livro Concluído!" : "📖 Em leitura";
+    document.getElementById("status-conclusao").textContent = concluido ? "✅ Obra Concluída!" : "📖 Em leitura";
     document.getElementById("leitor-progresso-badge").innerHTML = `Salvo no banco: <strong>Pág. ${pagina}/${totalPaginas}</strong>`;
 
     try {
@@ -116,17 +164,6 @@ function mudarTemaPapel(tema) {
     });
 }
 
-function mudarFonte(tipo) {
-    const folha = document.getElementById("conteudo-pagina");
-    if (tipo === "serif") {
-        folha.classList.add("font-serif");
-    } else {
-        folha.classList.remove("font-serif");
-    }
-    document.getElementById("fonte-sans").classList.toggle("active", tipo === "sans");
-    document.getElementById("fonte-serif").classList.toggle("active", tipo === "serif");
-}
-
 function ajustarTamanhoFonte(delta) {
     tamanhoFonteRem = Math.min(1.6, Math.max(0.9, tamanhoFonteRem + delta));
     document.getElementById("conteudo-pagina").style.fontSize = `${tamanhoFonteRem.toFixed(2)}rem`;
@@ -141,7 +178,7 @@ function definirAnimacaoEqualizador(ativo) {
 
 function iniciarAudiobook() {
     if (!textoAtual) {
-        document.getElementById("status-audio").textContent = "Não há texto nesta página para narrar.";
+        document.getElementById("status-audio").textContent = "Esta página é visual (Mangá/Imagem) e não possui texto narrável.";
         return;
     }
 
