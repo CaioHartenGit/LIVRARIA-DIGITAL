@@ -16,7 +16,7 @@ router = APIRouter(prefix = "/livros", tags = ["Livros"])
 def cadastrar_livros(
     titulo: str = Form(...),
     autor: str = Form(...),
-    usuario_id: int = Form(...),
+    usuario_id: Optional[int] = Form(1),
     arquivo: UploadFile = File(...)
 ):
     try:
