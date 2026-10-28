@@ -312,7 +312,19 @@
 
 .book-actions {
     display: flex;
+    align-items: center;
     gap: 8px;
+}
+
+.book-actions .btn-full {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
+.book-actions .btn:not(.btn-full) {
+    flex-shrink: 0;
+    padding: 12px 13px;
 }
 
 /* ==================== MODAL ==================== */
