@@ -2,7 +2,7 @@ fastapi
 uvicorn
 psycopg[binary]
 pypdf
-pymupdf
+pymupdf<2.0
 python-multipart
 python-dotenv
 pydantic
