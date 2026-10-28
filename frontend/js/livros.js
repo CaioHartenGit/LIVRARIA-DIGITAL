@@ -1,8 +1,23 @@
 const API_URL = "https://luminabooks.onrender.com";
 
 const usuarioLogado = JSON.parse(localStorage.getItem("usuario_livraria"));
-if (!usuarioLogado) {
+if (!usuarioLogado || !usuarioLogado.id) {
+    localStorage.removeItem("usuario_livraria");
     window.location.href = "index.html";
+}
+
+function extrairMensagemErro(dados, mensagemPadrao) {
+    if (!dados || !dados.detail) return mensagemPadrao;
+    if (typeof dados.detail === "string") return dados.detail;
+    if (Array.isArray(dados.detail)) {
+        return dados.detail
+            .map((item) => {
+                const campo = Array.isArray(item.loc) ? item.loc[item.loc.length - 1] : "";
+                return campo ? `Campo inválido ou ausente (${campo}): ${item.msg}` : item.msg;
+            })
+            .join(" | ");
+    }
+    return JSON.stringify(dados.detail);
 }
 
 let mapaProgresso = {};
@@ -269,7 +284,7 @@ async function enviarNovoLivro(event) {
         const dados = await resp.json();
 
         if (!resp.ok) {
-            throw new Error(dados.detail || "Erro ao cadastrar livro");
+            throw new Error(extrairMensagemErro(dados, "Erro ao cadastrar livro"));
         }
 
         fecharModalUpload();
