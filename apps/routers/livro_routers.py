@@ -4,11 +4,13 @@ import os
 from pypdf import PdfReader
 from apps.schemas.livro_schemas import LivroCreate, LivroResponse
 from apps.repository.livro_repository import LivroRepository
+from apps.repository.usuario_repository import UsuarioRepository
 from apps.services.livro_service import LivroService
-from typing import List, Literal
+from typing import List, Optional
 
 livro_repository = LivroRepository()
-livro_service = LivroService(livro_repository)
+usuario_repository = UsuarioRepository()
+livro_service = LivroService(livro_repository, usuario_repository)
 
 router = APIRouter(prefix = "/livros", tags = ["Livros"])
 
@@ -17,6 +19,7 @@ router = APIRouter(prefix = "/livros", tags = ["Livros"])
 def cadastrar_livros(
     titulo: str = Form(...),
     autor: str = Form(...),
+    usuario_id: int = Form(...),
     arquivo: UploadFile = File(...)
 ):
     try:
@@ -36,7 +39,8 @@ def cadastrar_livros(
             titulo,
             autor,
             total_paginas,
-            caminho_arquivo
+            caminho_arquivo,
+            usuario_id
         )
         return cadastro_livro
     except ValueError as erro:
@@ -45,11 +49,11 @@ def cadastrar_livros(
             detail = str(erro)
         )
 
-# Listando Livros
+# Listando Livros (Filtra por usuario_id se for usuario normal; Admin vê todos)
 @router.get("/", response_model = List [LivroResponse])
-def listar_livros():
+def listar_livros(usuario_id: Optional[int] = None):
     try:
-        listar_livro = livro_service.listar_livro()
+        listar_livro = livro_service.listar_livro(usuario_id)
         if listar_livro == []:
             return "Nenhum livro cadastrado"
         return listar_livro
@@ -76,11 +80,11 @@ def buscar_livro_por_id(id: int):
             detail = str(erro)
         )
 
-# Buscar Livro por Titulo
+# Buscar Livro por Titulo (Filtra por usuario_id se for usuario normal; Admin vê todos)
 @router.get("/titulo/{titulo}", response_model = List [LivroResponse], status_code = 200)
-def buscar_livro_por_titulo(titulo: str):
+def buscar_livro_por_titulo(titulo: str, usuario_id: Optional[int] = None):
     try:
-        livro_por_titulo = livro_service.buscar_por_nome(titulo)
+        livro_por_titulo = livro_service.buscar_por_nome(titulo, usuario_id)
         if livro_por_titulo == []:
             raise HTTPException(
                 status_code = status.HTTP_404_NOT_FOUND,

@@ -1,11 +1,25 @@
 class Livro:
-    def __init__(self, id_livro, titulo, autor, total_paginas, arquivo_path, ativo=True):
+    def __init__(self, id_livro, titulo, autor, total_paginas, arquivo_path, usuario_id=None, ativo=True):
         self.id_livro = id_livro
         self.titulo = titulo
         self.autor = autor
         self.total_paginas = total_paginas
         self.arquivo_path = arquivo_path
+        self.usuario_id = usuario_id
         self.ativo = ativo
+
+    @property
+    def usuario_id(self):
+        return self._usuario_id
+
+    @usuario_id.setter
+    def usuario_id(self, NovoUsuarioId):
+        if NovoUsuarioId is not None:
+            if not isinstance(NovoUsuarioId, int) or isinstance(NovoUsuarioId, bool):
+                raise ValueError("O ID do usuário dono do livro deve ser um número inteiro")
+            if NovoUsuarioId <= 0:
+                raise ValueError("O ID do usuário dono do livro deve ser maior que 0")
+        self._usuario_id = NovoUsuarioId
 
     @property
     def id_livro(self):

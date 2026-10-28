@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Literal
+from typing import Optional
 # ==================================================================================
 # Criando Livro Create
 # ==================================================================================
@@ -8,6 +8,7 @@ class LivroCreate(BaseModel):
     autor: str = Field( min_length = 1, max_length = 100, description = "Autor do livro")
     total_paginas: int = Field(gt = 0, description = "Total de páginas do livro")
     arquivo_path: str = Field(min_length = 1, max_length = 255, description = "Caminho do arquivo do livro")
+    usuario_id: int = Field(gt = 0, description = "ID do usuário que cadastrou o livro")
 
 
 
@@ -22,6 +23,7 @@ class LivroResponse(BaseModel):
     total_paginas: int
     arquivo_path: str
     ativo: bool
+    usuario_id: Optional[int] = None
 
 
 

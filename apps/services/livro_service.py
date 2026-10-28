@@ -6,25 +6,49 @@ import fitz
 import base64
 import os
 class LivroService:
-    def __init__(self, livro_repository):
+    def __init__(self, livro_repository, usuario_repository=None):
         self.livro_repository = livro_repository
+        self.usuario_repository = usuario_repository
 
-    def cadastrar(self, titulo, autor, total_paginas, arquivo_path):
-        livrocriar = LivroCreate(titulo = titulo, autor = autor, total_paginas = total_paginas, arquivo_path = arquivo_path)
-        
-        livrocadastrado = self.livro_repository.buscar_por_nome(livrocriar.titulo)
+    def cadastrar(self, titulo, autor, total_paginas, arquivo_path, usuario_id):
+        livrocriar = LivroCreate(
+            titulo = titulo,
+            autor = autor,
+            total_paginas = total_paginas,
+            arquivo_path = arquivo_path,
+            usuario_id = usuario_id
+        )
+
+        if self.usuario_repository:
+            usuario = self.usuario_repository.buscar_usuario_por_id(livrocriar.usuario_id)
+            if usuario is None:
+                raise ValueError("Usuário informado não existe")
+
+        livrocadastrado = self.livro_repository.buscar_por_nome_e_usuario(livrocriar.titulo, livrocriar.usuario_id)
         if livrocadastrado:
-            raise ValueError("Já existe um livro com esse título cadastrado")
+            raise ValueError("Você já cadastrou um livro com esse título")
 
         return self.livro_repository.cadastrar(
             livrocriar.titulo,
             livrocriar.autor,
             livrocriar.total_paginas,
             livrocriar.arquivo_path,
+            livrocriar.usuario_id
         )
 
-    def listar_livro(self):
-        lista = self.livro_repository.listar_livros()
+    def listar_livro(self, usuario_id=None):
+        if usuario_id is not None and self.usuario_repository:
+            usuario = self.usuario_repository.buscar_usuario_por_id(usuario_id)
+            if usuario is None:
+                raise ValueError("Usuário não encontrado")
+
+            if usuario["tipo_usuario"] == "admin":
+                lista = self.livro_repository.listar_livros()
+            else:
+                lista = self.livro_repository.listar_livros_por_usuario(usuario_id)
+        else:
+            lista = self.livro_repository.listar_livros()
+
         if not lista:
             raise ValueError("Não existem livros cadastrados")
         return lista
@@ -35,8 +59,19 @@ class LivroService:
             raise ValueError("ID do livro não existe")
         return livro
 
-    def buscar_por_nome(self, titulo):
-        livro = self.livro_repository.buscar_por_nome(titulo)
+    def buscar_por_nome(self, titulo, usuario_id=None):
+        if usuario_id is not None and self.usuario_repository:
+            usuario = self.usuario_repository.buscar_usuario_por_id(usuario_id)
+            if usuario is None:
+                raise ValueError("Usuário não encontrado")
+
+            if usuario["tipo_usuario"] == "admin":
+                livro = self.livro_repository.buscar_por_nome(titulo)
+            else:
+                livro = self.livro_repository.buscar_por_nome_e_usuario(titulo, usuario_id)
+        else:
+            livro = self.livro_repository.buscar_por_nome(titulo)
+
         if not livro:
             raise ValueError("Título do livro não existe")
         return livro

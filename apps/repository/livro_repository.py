@@ -2,18 +2,18 @@ from apps.database.conexao import Conectar
 from psycopg.rows import dict_row
 
 class LivroRepository:
-    def cadastrar(self,titulo,autor,total_paginas,arquivo_path):
+    def cadastrar(self,titulo,autor,total_paginas,arquivo_path,usuario_id):
         conn = Conectar.conectar()
         cursor = conn.cursor(row_factory = dict_row)
 
         try:
             cursor.execute(
                 '''
-                INSERT INTO livro(titulo, autor, total_paginas, arquivo_path)
-                VALUES (%s,%s,%s,%s)
-                RETURNING id, titulo, autor, total_paginas, arquivo_path, ativo
+                INSERT INTO livro(titulo, autor, total_paginas, arquivo_path, usuario_id)
+                VALUES (%s,%s,%s,%s,%s)
+                RETURNING id, titulo, autor, total_paginas, arquivo_path, ativo, usuario_id
                 
-                ''',(titulo,autor, total_paginas,arquivo_path)
+                ''',(titulo,autor, total_paginas,arquivo_path,usuario_id)
             )
             livro = cursor.fetchone()
             conn.commit()
@@ -33,9 +33,34 @@ class LivroRepository:
         try:
             cursor.execute(
             '''
-            SELECT id, titulo, autor, total_paginas, arquivo_path, ativo
+            SELECT id, titulo, autor, total_paginas, arquivo_path, ativo, usuario_id
             FROM livro
+            ORDER BY id DESC
             '''
+            )
+            livro = cursor.fetchall()
+            return livro
+        
+        except Exception:
+            conn.rollback()
+            raise
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    def listar_livros_por_usuario(self, usuario_id):
+        conn = Conectar.conectar()
+        cursor = conn.cursor(row_factory = dict_row)
+
+        try:
+            cursor.execute(
+            '''
+            SELECT id, titulo, autor, total_paginas, arquivo_path, ativo, usuario_id
+            FROM livro
+            WHERE usuario_id = %s
+            ORDER BY id DESC
+            ''',(usuario_id,)
             )
             livro = cursor.fetchall()
             return livro
@@ -54,7 +79,7 @@ class LivroRepository:
         try:
             cursor.execute(
                 '''
-                SELECT id, titulo, autor, total_paginas, arquivo_path, ativo
+                SELECT id, titulo, autor, total_paginas, arquivo_path, ativo, usuario_id
                 FROM livro
                 WHERE id = %s
                 ''',(id,)
@@ -74,11 +99,32 @@ class LivroRepository:
         try:
             cursor.execute(
             '''
-                SELECT id, titulo, autor, total_paginas,arquivo_path, ativo
+                SELECT id, titulo, autor, total_paginas, arquivo_path, ativo, usuario_id
                 FROM livro
                 WHERE titulo ILIKE %s
 
             ''',(f"%{titulo}%",)
+            )
+            buscar_livro_nome = cursor.fetchall()
+            return buscar_livro_nome
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cursor.close()
+            conn.close()
+
+    def buscar_por_nome_e_usuario(self, titulo, usuario_id):
+        conn = Conectar.conectar()
+        cursor = conn.cursor(row_factory = dict_row)
+        try:
+            cursor.execute(
+            '''
+                SELECT id, titulo, autor, total_paginas, arquivo_path, ativo, usuario_id
+                FROM livro
+                WHERE titulo ILIKE %s AND usuario_id = %s
+
+            ''',(f"%{titulo}%", usuario_id)
             )
             buscar_livro_nome = cursor.fetchall()
             return buscar_livro_nome
@@ -97,7 +143,7 @@ class LivroRepository:
                 '''
                 DELETE FROM livro
                 WHERE id = %s
-                RETURNING id, titulo, autor, total_paginas, arquivo_path, ativo
+                RETURNING id, titulo, autor, total_paginas, arquivo_path, ativo, usuario_id
                 ''',(id,)
             )
             livro_deletado = cursor.fetchone()
