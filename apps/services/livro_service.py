@@ -6,9 +6,23 @@ import fitz
 import base64
 import os
 class LivroService:
-    def __init__(self, livro_repository, usuario_repository=None):
+    def __init__(self, livro_repository, usuario_repository):
         self.livro_repository = livro_repository
         self.usuario_repository = usuario_repository
+
+    def salvar_arquivo_pdf(self, arquivo):
+        if not arquivo.filename or not arquivo.filename.lower().endswith(".pdf"):
+            raise ValueError("O arquivo enviado deve ser um PDF")
+
+        os.makedirs("uploads", exist_ok = True)
+        caminho_arquivo = f"uploads/{arquivo.filename}"
+
+        with open(caminho_arquivo, "wb") as buffer:
+            buffer.write(arquivo.file.read())
+
+        leitor = PdfReader(caminho_arquivo)
+        total_paginas = len(leitor.pages)
+        return caminho_arquivo, total_paginas
 
     def cadastrar(self, titulo, autor, total_paginas, arquivo_path, usuario_id):
         livrocriar = LivroCreate(
@@ -19,10 +33,9 @@ class LivroService:
             usuario_id = usuario_id
         )
 
-        if self.usuario_repository:
-            usuario = self.usuario_repository.buscar_usuario_por_id(livrocriar.usuario_id)
-            if usuario is None:
-                raise ValueError("Usuário informado não existe")
+        usuario = self.usuario_repository.buscar_usuario_por_id(livrocriar.usuario_id)
+        if usuario is None:
+            raise ValueError("Usuário informado não existe")
 
         livrocadastrado = self.livro_repository.buscar_por_nome_e_usuario(livrocriar.titulo, livrocriar.usuario_id)
         if livrocadastrado:
@@ -36,8 +49,18 @@ class LivroService:
             livrocriar.usuario_id
         )
 
+    def cadastrar_com_upload(self, titulo, autor, usuario_id, arquivo):
+        caminho_arquivo, total_paginas = self.salvar_arquivo_pdf(arquivo)
+        return self.cadastrar(
+            titulo = titulo,
+            autor = autor,
+            total_paginas = total_paginas,
+            arquivo_path = caminho_arquivo,
+            usuario_id = usuario_id
+        )
+
     def listar_livro(self, usuario_id=None):
-        if usuario_id is not None and self.usuario_repository:
+        if usuario_id is not None:
             usuario = self.usuario_repository.buscar_usuario_por_id(usuario_id)
             if usuario is None:
                 raise ValueError("Usuário não encontrado")
@@ -60,7 +83,7 @@ class LivroService:
         return livro
 
     def buscar_por_nome(self, titulo, usuario_id=None):
-        if usuario_id is not None and self.usuario_repository:
+        if usuario_id is not None:
             usuario = self.usuario_repository.buscar_usuario_por_id(usuario_id)
             if usuario is None:
                 raise ValueError("Usuário não encontrado")

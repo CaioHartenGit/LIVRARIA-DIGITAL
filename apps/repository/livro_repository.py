@@ -2,6 +2,30 @@ from apps.database.conexao import Conectar
 from psycopg.rows import dict_row
 
 class LivroRepository:
+    def __init__(self):
+        self.garantir_coluna_usuario_id()
+
+    def garantir_coluna_usuario_id(self):
+        conn = Conectar.conectar()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                '''
+                ALTER TABLE livro
+                ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuario(id) ON DELETE CASCADE;
+
+                UPDATE livro
+                SET usuario_id = (SELECT id FROM usuario WHERE tipo_usuario = 'admin' ORDER BY id ASC LIMIT 1)
+                WHERE usuario_id IS NULL;
+                '''
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+        finally:
+            cursor.close()
+            conn.close()
+
     def cadastrar(self,titulo,autor,total_paginas,arquivo_path,usuario_id):
         conn = Conectar.conectar()
         cursor = conn.cursor(row_factory = dict_row)

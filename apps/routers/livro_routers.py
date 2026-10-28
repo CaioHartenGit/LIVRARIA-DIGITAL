@@ -1,8 +1,5 @@
 from fastapi import APIRouter, status, HTTPException, UploadFile, File, Form
-import os
-# pyrefly: ignore[missing-import]
-from pypdf import PdfReader
-from apps.schemas.livro_schemas import LivroCreate, LivroResponse
+from apps.schemas.livro_schemas import LivroResponse
 from apps.repository.livro_repository import LivroRepository
 from apps.repository.usuario_repository import UsuarioRepository
 from apps.services.livro_service import LivroService
@@ -23,24 +20,11 @@ def cadastrar_livros(
     arquivo: UploadFile = File(...)
 ):
     try:
-        if not arquivo.filename.endswith(".pdf"):
-            raise ValueError("O arquivo enviado deve ser um PDF")
-
-        os.makedirs("uploads", exist_ok = True)
-        caminho_arquivo = f"uploads/{arquivo.filename}"
-
-        with open(caminho_arquivo, "wb") as buffer:
-            buffer.write(arquivo.file.read())
-
-        leitor = PdfReader(caminho_arquivo)
-        total_paginas = len(leitor.pages)
-
-        cadastro_livro = livro_service.cadastrar(
-            titulo,
-            autor,
-            total_paginas,
-            caminho_arquivo,
-            usuario_id
+        cadastro_livro = livro_service.cadastrar_com_upload(
+            titulo = titulo,
+            autor = autor,
+            usuario_id = usuario_id,
+            arquivo = arquivo
         )
         return cadastro_livro
     except ValueError as erro:
