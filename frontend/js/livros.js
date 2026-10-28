@@ -72,7 +72,7 @@ async function carregarAcervo() {
     grid.innerHTML = "<p style='color: var(--text-muted);'>Sincronizando biblioteca...</p>";
 
     try {
-        const resp = await fetch(`${API_URL}/livros/`);
+        const resp = await fetch(`${API_URL}/livros/?usuario_id=${usuarioLogado.id}`);
         const dados = await resp.json();
 
         if (!resp.ok || !Array.isArray(dados)) {
@@ -121,7 +121,7 @@ async function buscarLivros() {
 
     const grid = document.getElementById("books-grid");
     try {
-        const resp = await fetch(`${API_URL}/livros/titulo/${encodeURIComponent(termo)}`);
+        const resp = await fetch(`${API_URL}/livros/titulo/${encodeURIComponent(termo)}?usuario_id=${usuarioLogado.id}`);
         const dados = await resp.json();
 
         if (!resp.ok || !Array.isArray(dados)) {
@@ -165,8 +165,13 @@ function renderizarLivros(livros) {
 
         const temaCapa = `cover-theme-${(livro.id || index) % 5}`;
 
-        const botaoDeletar = usuarioLogado.tipo_usuario === "admin"
+        const podeDeletar = usuarioLogado.tipo_usuario === "admin" || livro.usuario_id === usuarioLogado.id;
+        const botaoDeletar = podeDeletar
             ? `<button class="btn btn-danger" onclick="deletarLivro(${livro.id})" title="Excluir obra">🗑️</button>`
+            : "";
+
+        const tagDonoAdmin = usuarioLogado.tipo_usuario === "admin" && livro.usuario_id
+            ? ` <span style="font-size: 0.75rem; color: var(--primary-light);">• ${livro.usuario_id === usuarioLogado.id ? "Sua obra" : `Usuário #${livro.usuario_id}`}</span>`
             : "";
 
         const card = document.createElement("div");
@@ -179,7 +184,7 @@ function renderizarLivros(livros) {
             <div class="book-card-body">
                 <div>
                     <div class="book-title">${livro.titulo}</div>
-                    <div class="book-author">por ${livro.autor}</div>
+                    <div class="book-author">por ${livro.autor}${tagDonoAdmin}</div>
                     <div class="progress-container">
                         <div class="book-meta">
                             <span>${statusTexto}</span>
@@ -249,6 +254,7 @@ async function enviarNovoLivro(event) {
     const formData = new FormData();
     formData.append("titulo", titulo);
     formData.append("autor", autor);
+    formData.append("usuario_id", usuarioLogado.id);
     formData.append("arquivo", arquivo);
 
     btn.disabled = true;
