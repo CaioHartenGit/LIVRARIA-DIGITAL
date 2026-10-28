@@ -1,9 +1,19 @@
-# ✨ LuminaBooks — Reading & Audiobook Studio
+# ✨ LuminaBooks — API de Biblioteca Digital, Mangás & Audiobook Studio
 
 🌐 **Acesse a Plataforma Online (Netlify):** [https://luminabokks.netlify.app](https://luminabokks.netlify.app)  
 ⚙️ **API em Produção & Swagger UI (Render):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
 
-Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**, desenvolvida com **Python 3.14**, **FastAPI**, **Pydantic v2**, **PostgreSQL** e **pypdf** no Backend, interface modular em **HTML5, CSS3 (Glassmorphism) e JavaScript (Web Speech API)** no Front-end, e hospedada em nuvem utilizando **Netlify**, **Render** e **Neon Serverless Postgres**.
+---
+
+## 🎯 Propósito e Foco do Projeto (Back-end & Banco de Dados)
+
+O **LuminaBooks** é um projeto desenvolvido com **foco principal em Engenharia de Software Back-end e Modelagem de Banco de Dados Relacional**.  
+
+Todo o coração do sistema foi construído para praticar e consolidar conceitos essenciais de arquitetura de servidores:
+* **Arquitetura em Camadas Estrita (`Entities` ➔ `Schemas` ➔ `Repository` ➔ `Service` ➔ `Routers`):** Separação total entre regras de domínio, validação de contratos (DTOs), persistência em SQL puro (`psycopg` sem depender de mágica de ORMs) e exposição de rotas HTTP REST com **FastAPI**.
+* **Regras de Negócio e Controle de Acesso (RBAC & Multi-Tenancy por Usuário):** Isolamento de acervo por `usuario_id` (onde cada leitor vê apenas os livros que cadastrou, enquanto usuários `admin` possuem visão e gerenciamento global de todos os livros e contas do sistema).
+* **Processamento de Arquivos e Otimização de Memória (`PyMuPDF` & `pypdf`):** Extração de texto para Audiobook e renderização sob demanda de páginas ilustradas/mangás em `JPEG Base64`, incluindo algoritmo de **fatiamento automático (`clip`)** para PDFs de tiras verticais gigantes (webtoons/mangás) rodando dentro do limite de 512 MB de RAM do servidor cloud.
+* **Front-end Complementar:** A interface visual (`HTML5`, `CSS3` e `JavaScript`) foi implementada de forma prática e direta para servir como cliente real de consumo da API, permitindo testar visualmente os fluxos de upload, leitura e progresso.
 
 ---
 
@@ -11,121 +21,96 @@ Plataforma Full-Stack de **Leitura Interativa Estilo Kindle e Audiobook Studio**
 
 | Camada | Plataforma | Função no Projeto |
 | :--- | :--- | :--- |
-| **Front-end (Web App)** | **Netlify** (`luminabokks.netlify.app`) | Hospedagem global com CDN e deploy contínuo (CI/CD) via GitHub |
-| **Backend (API REST)** | **Render** (`luminabooks.onrender.com`) | Servidor cloud rodando **FastAPI + Uvicorn** em produção |
-| **Banco de Dados** | **Neon.tech** (Serverless PostgreSQL) | Banco de dados relacional PostgreSQL gerenciado na nuvem com SSL |
+| **Backend (API REST — Foco Principal)** | **Render** (`luminabooks.onrender.com`) | Servidor cloud rodando **FastAPI + Uvicorn + PyMuPDF** em produção |
+| **Banco de Dados Relacional** | **Neon.tech** (Serverless PostgreSQL) | Banco PostgreSQL gerenciado na nuvem com chaves estrangeiras, `CASCADE` e `CHECK constraints` |
+| **Front-end (Cliente Web)** | **Netlify** (`luminabokks.netlify.app`) | Interface web responsiva (Desktop & Mobile) consumindo a API REST |
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
-* **Backend:** Python 3.14 + FastAPI + Uvicorn
-* **Validação de Dados (DTOs):** Pydantic v2
-* **Banco de Dados:** PostgreSQL (`psycopg` v3 com `dict_row`) + **Neon Cloud Database**
-* **Segurança & Configuração:** Variáveis de ambiente com `python-dotenv` (`.env` / `.env.example` / `DATABASE_URL`)
-* **Processamento de PDF:** `pypdf` (`PdfReader`) + `python-multipart`
-* **Front-end & Audiobook:** HTML5, CSS3 Modular (`style-layout`, `style-components`, `style-pages`), JavaScript ES6+ e `Web Speech API` (TTS em Português)
-* **Deploy & Cloud:** **Netlify** (Front-end), **Render** (Backend Web Service) e **Neon** (PostgreSQL Cloud)
+* **Back-end:** Python 3.14 + FastAPI + Uvicorn
+* **Validação de Contratos (DTOs):** Pydantic v2 (`BaseModel`, `Field`, `ConfigDict`)
+* **Banco de Dados & SQL:** PostgreSQL (`psycopg` v3 com `dict_row`) + **Neon Cloud Database**
+* **Processamento de PDFs, Livros e Mangás:** `PyMuPDF` (`fitz`) + `pypdf` + `python-multipart`
+* **Segurança & Configuração:** Variáveis de ambiente com `python-dotenv` (`.env` local e `DATABASE_URL` em produção)
+* **Front-end & Audiobook:** HTML5, CSS3 Responsivo, JavaScript ES6+ e `Web Speech API` (narração TTS)
 
 ---
 
-## 🏗️ Arquitetura do Projeto
+## 🏗️ Arquitetura do Back-end
 
-O projeto aplica **Arquitetura em Camadas (Layered / Clean Architecture)** no Backend integrada a um **Front-end Modular**:
+O projeto segue uma **Arquitetura em Camadas (Layered Architecture)** rigorosa, garantindo que o arquivo `main.py` apenas inicialize a aplicação e que nenhuma rota (`Router`) execute SQL ou manipule arquivos diretamente:
 
 ```text
-Front-end (Netlify) ──► Router (FastAPI / Render) ──► Service (Regras) ──► Repository (SQL) ──► PostgreSQL (Neon)
+Cliente Web ──► Router (HTTP/FastAPI) ──► Service (Regras de Negócio/PDF) ──► Repository (SQL Puro) ──► PostgreSQL (Neon)
 ```
 
 ### Estrutura de Diretórios
 
 ```text
 LuminaBooks/
-├── main.py                              # Ponto de entrada da API FastAPI + CORS + StaticFiles
-├── requirements.txt                     # Dependências de produção para o Render
-├── netlify.toml                         # Configuração de publicação automática na Netlify
-├── .env                                 # Variáveis de ambiente locais (ignorado pelo Git)
+├── main.py                              # Inicialização da API FastAPI, CORS, StaticFiles e registro de Routers
+├── requirements.txt                     # Dependências enxutas de produção para o Render
+├── netlify.toml                         # Configuração de publicação do diretório frontend
 ├── .env.example                         # Modelo público de variáveis de ambiente
 ├── .gitignore                           # Proteção de credenciais, cache e uploads locais
-├── README.md                            # Documentação completa do projeto
-├── uploads/                             # Diretório onde os PDFs enviados são armazenados
-├── frontend/                            # Interface Visual LuminaBooks & Audiobook Studio
-│   ├── index.html                       # Tela Split-Screen de Login e Cadastro
-│   ├── livros.html                      # Dashboard de Estatísticas, Estante 3D e Upload de PDF
-│   ├── leitor.html                      # Leitor Estilo Kindle (Noturno/Sépia/Claro) + LuminaVox Player
-│   ├── css/
-│   │   ├── style-layout.css             # Variáveis globais, tipografia, Navbar, Containers e Grids
-│   │   ├── style-components.css         # Botões, Inputs, Cards 3D, Barra de Progresso e Modais
-│   │   └── style-pages.css              # Estilos específicos de cada tela, temas Kindle e equalizador
-│   └── js/
-│       ├── auth.js                      # Autenticação e sessão do usuário
-│       ├── livros.js                    # Catálogo, filtros, estatísticas e envio de PDF
-│       └── leitor.js                    # Leitura de páginas, sincronização de progresso e voz TTS
-└── apps/
-    ├── database/
-    │   └── conexao.py                   # Conexão híbrida (Neon DATABASE_URL ou .env local)
-    ├── entities/
-    │   ├── livro.py                     # Entidade Livro com encapsulamento (@property/@setter)
-    │   ├── usuario.py                   # Entidade Usuario com validações de domínio
-    │   └── progresso.py                 # Entidade Progresso com validações de tipos e datas
-    ├── schemas/
-    │   ├── livro_schemas.py             # Schemas Pydantic (LivroCreate, LivroResponse)
-    │   ├── usuario_schemas.py           # Schemas Pydantic (UsuarioCreate, UsuarioLogin, UsuarioResponse)
-    │   └── progresso_schemas.py         # Schemas Pydantic (ProgressoCreate, ProgressoUpdate, ProgressoResponse)
-    ├── repository/
-    │   ├── livro_repository.py          # Queries SQL da tabela livro
-    │   ├── usuario_repository.py        # Queries SQL da tabela usuario
-    │   └── progresso_repository.py      # Queries SQL da tabela progresso
-    ├── services/
-    │   ├── livro_service.py             # Regras de negócio de livros e extração de páginas com pypdf
-    │   ├── usuario_service.py           # Regras de negócio de usuários, login e permissões RBAC
-    │   └── progresso_service.py         # Regras cruzadas entre Usuário, Livro e Progresso
-    └── routers/
-        ├── livro_routers.py             # Rotas HTTP de livros, upload de PDF e leitura de página
-        ├── usuario_routers.py           # Rotas HTTP de login, cadastro e administração
-        └── progresso_routers.py         # Rotas HTTP de progresso de leitura
+├── README.md                            # Documentação técnica do projeto
+├── uploads/                             # Diretório de armazenamento dos PDFs enviados
+├── apps/                                # NÚCLEO DO PROJETO (BACK-END EM CAMADAS)
+│   ├── database/
+│   │   └── conexao.py                   # Conexão híbrida PostgreSQL (Neon DATABASE_URL ou .env local)
+│   ├── entities/
+│   │   ├── livro.py                     # Entidade Livro com encapsulamento (@property/@setter) e usuario_id
+│   │   ├── usuario.py                   # Entidade Usuario com validações de domínio e perfil (normal/admin)
+│   │   └── progresso.py                 # Entidade Progresso com validações de páginas e status
+│   ├── schemas/
+│   │   ├── livro_schemas.py             # Contratos Pydantic (LivroCreate, LivroResponse)
+│   │   ├── usuario_schemas.py           # Contratos Pydantic (UsuarioCreate, UsuarioLogin, UsuarioResponse)
+│   │   └── progresso_schemas.py         # Contratos Pydantic (ProgressoCreate, ProgressoUpdate, ProgressoResponse)
+│   ├── repository/
+│   │   ├── livro_repository.py          # Queries SQL parametrizadas da tabela livro (filtro por dono e listagem admin)
+│   │   ├── usuario_repository.py        # Queries SQL parametrizadas da tabela usuario
+│   │   └── progresso_repository.py      # Queries SQL parametrizadas da tabela progresso
+│   ├── services/
+│   │   ├── livro_service.py             # Regras de negócio, RBAC de estante, extração de texto e fatiamento de Mangás
+│   │   ├── usuario_service.py           # Regras de autenticação, cadastro e permissões de administrador
+│   │   └── progresso_service.py         # Regras cruzadas entre Usuário, Livro e Progresso de leitura
+│   └── routers/
+│       ├── livro_routers.py             # Endpoints HTTP de livros, upload de PDF e leitura de páginas
+│       ├── usuario_routers.py           # Endpoints HTTP de login, cadastro e gerenciamento de usuários
+│       └── progresso_routers.py         # Endpoints HTTP de sincronização de progresso
+└── frontend/                            # Interface Web complementar para consumo da API
+    ├── index.html                       # Tela de Login e Cadastro
+    ├── livros.html                      # Estante pessoal, estatísticas e modal de upload de PDF
+    ├── leitor.html                      # Leitor Híbrido (Modo Texto Kindle + Modo Mangá/Imagem + Audiobook)
+    ├── css/                             # Estilização modularizada e responsiva para smartphones
+    └── js/                              # Integração via Fetch API com o Back-end no Render
 ```
 
 ---
 
-## ⚙️ Funcionalidades Completas
+## ⚙️ Principais Regras de Negócio Implementadas
 
-### 1. 🎨 Interface LuminaBooks & LuminaVox Audiobook Studio
-* **Tela Split-Screen de Autenticação (`index.html`):** Vitrine interativa da plataforma e acesso rápido de Login/Cadastro.
-* **Dashboard de Estatísticas & Estante 3D (`livros.html`):** Exibe contadores em tempo real (*Obras no Acervo*, *Em Leitura*, *Livros Concluídos* e *Total de Páginas Lidas*), filtros por status (*Todos*, *Lendo Agora*, *Concluídos*) e capas estilizadas.
-* **Leitor Estilo Kindle (`leitor.html`):** Alternância entre temas **🌙 Noturno**, **📜 Sépia** e **☀️ Claro**, escolha de tipografia (**Livro Serif** ou **Moderna Sans**), controle de tamanho da fonte (`A-` / `A+`) e navegação pelas setas do teclado (`⬅️` / `➡️`).
-* **Player de Audiobook com Auto-Avanço:** Narra o texto extraído do PDF em Português com equalizador animado, controle de velocidade (`0.9x` a `1.5x`) e opção de virar a página automaticamente ao terminar a narração.
+### 1. 🔐 Isolamento de Acervo por Usuário vs. Visão de Administrador
+* **Estante Privada (`tipo_usuario = 'normal'`):** Cada livro cadastrado recebe o `usuario_id` de quem fez o upload. Quando um usuário comum lista ou pesquisa livros (`GET /livros/?usuario_id={id}`), o `LivroService` retorna **exclusivamente** as obras cadastradas por ele.
+* **Visão Global (`tipo_usuario = 'admin'`):** Quando o administrador consulta o acervo ou realiza buscas, o `LivroService` identifica a permissão `admin` no banco e retorna **todos os livros de todos os usuários**, além de liberar o painel de gerenciamento de contas (`GET /usuarios/admin/{id}`).
 
-### 2. 📖 Módulo de Livros & Upload Real de PDF (`pypdf`)
-* **Upload Real de PDF (`UploadFile`):** Envio do arquivo `.pdf` pela interface para todos os usuários (`normal` e `admin`).
-* **Contagem Automática de Páginas:** O `PdfReader` calcula automaticamente o `total_paginas` do PDF no momento do upload.
-* **Extração de Página sob Demanda:** A rota `GET /livros/{id}/pagina/{pagina}` extrai o texto exato da folha solicitada.
+### 2. 🎌 Leitura Híbrida: Livros em Texto & Mangás / PDFs Ilustrados (`PyMuPDF`)
+* **Extração Dupla sob Demanda (`GET /livros/{id}/pagina/{pagina}`):** A API extrai simultaneamente o texto selecionável da página (para leitura estilo Kindle e narração por voz) e renderiza a página original como imagem `JPEG Base64`.
+* **Fatiamento Inteligente de Tiras Verticais (`obter_fatias_paginas`):** Capítulos de mangás ou webtoons exportados como uma única tira vertical gigante (ex: 1 página com `30.000px` de altura) são detectados automaticamente (`altura > largura * 2.2`) e fatiados virtualmente via `fitz.Rect` (`clip`), dividindo o capítulo em páginas individuais leves (~100 KB) sem sobrecarregar a memória RAM do servidor.
 
-### 3. 👤 Módulo de Usuários, Login & RBAC
-* **Perfis de Acesso (`normal` e `admin`):** Qualquer usuário autenticado pode publicar PDFs e ler livros; administradores possuem acesso exclusivo ao **Painel de Usuários (`GET /usuarios/admin/{id}`)** para listar e gerenciar todas as contas cadastradas.
-* **Proteção de Dados:** O `UsuarioResponse` nunca expõe a senha nos retornos JSON.
-
-### 4. 📈 Módulo de Progresso de Leitura
-* **Sincronização Automática:** Cada virada de página no leitor atualiza automaticamente a `pagina_atual` no PostgreSQL (Neon).
-* **Conclusão Inteligente:** Ao alcançar a última página do livro (`pagina_atual == total_paginas`), o livro é marcado automaticamente como `concluido = True`.
+### 3. 📈 Controle de Progresso de Leitura (`ProgressoService`)
+* Valida a existência do usuário e do livro antes de registrar o progresso.
+* Impede que a `pagina_atual` ultrapasse o `total_paginas` real da obra.
+* Marca automaticamente o atributo `concluido = True` assim que o leitor atinge a última página.
 
 ---
 
 ## 🗄️ Modelagem do Banco de Dados (PostgreSQL / Neon)
 
 ```sql
--- 1. Tabela de Livros
-CREATE TABLE IF NOT EXISTS livro (
-    id SERIAL PRIMARY KEY,
-    titulo VARCHAR(200) NOT NULL,
-    autor VARCHAR(100) NOT NULL,
-    total_paginas INT NOT NULL CHECK (total_paginas > 0),
-    arquivo_path VARCHAR(255) NOT NULL,
-    ativo BOOLEAN DEFAULT TRUE,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 2. Tabela de Usuários (com RBAC)
+-- 1. Tabela de Usuários (com controle de perfil normal/admin)
 CREATE TABLE IF NOT EXISTS usuario (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -133,6 +118,18 @@ CREATE TABLE IF NOT EXISTS usuario (
     senha VARCHAR(100) NOT NULL,
     ativo BOOLEAN DEFAULT TRUE,
     tipo_usuario VARCHAR(20) DEFAULT 'normal' CHECK (tipo_usuario IN ('normal', 'admin'))
+);
+
+-- 2. Tabela de Livros (vinculada ao usuário dono da obra)
+CREATE TABLE IF NOT EXISTS livro (
+    id SERIAL PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL,
+    autor VARCHAR(100) NOT NULL,
+    total_paginas INT NOT NULL CHECK (total_paginas > 0),
+    arquivo_path VARCHAR(255) NOT NULL,
+    usuario_id INT REFERENCES usuario(id) ON DELETE CASCADE,
+    ativo BOOLEAN DEFAULT TRUE,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. Tabela de Progresso de Leitura
@@ -156,11 +153,11 @@ CREATE TABLE IF NOT EXISTS progresso (
 ### 📚 Livros (`/livros`)
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/livros/` | Faz upload de um arquivo `.pdf`, calcula o total de páginas e cadastra o livro |
-| `GET` | `/livros/` | Lista todos os livros cadastrados |
+| `POST` | `/livros/` | Recebe upload `.pdf`, fatia/calcula o total de páginas e vincula ao `usuario_id` |
+| `GET` | `/livros/?usuario_id={id}` | Lista apenas os livros do usuário (ou todos os livros, se for `admin`) |
 | `GET` | `/livros/{id}` | Busca os detalhes de um livro pelo ID |
-| `GET` | `/livros/titulo/{titulo}` | Busca livros por parte do título (`ILIKE`) |
-| `GET` | `/livros/{id}/pagina/{pagina}` | Extrai o texto de uma página específica do PDF (Leitura / Audiobook) |
+| `GET` | `/livros/titulo/{titulo}?usuario_id={id}` | Pesquisa livros por título (`ILIKE`) respeitando a visibilidade do usuário |
+| `GET` | `/livros/{id}/pagina/{pagina}` | Retorna o texto extraído e a imagem renderizada (`Base64`) da página ou fatia do mangá |
 | `DELETE` | `/livros/{id}` | Remove um livro pelo ID |
 
 ### 👤 Usuários (`/usuarios`)
@@ -169,14 +166,14 @@ CREATE TABLE IF NOT EXISTS progresso (
 | `POST` | `/usuarios/login` | Autentica um usuário por e-mail e senha |
 | `POST` | `/usuarios/` | Cadastra um novo usuário |
 | `PUT` | `/usuarios/{id}` | Atualiza os dados de um usuário |
-| `GET` | `/usuarios/admin/{id}` | Lista todos os usuários (exclusivo para administradores) |
-| `DELETE` | `/usuarios/{id_admin}?id_usuario={id}` | Deleta um usuário (exclusivo para administradores ativos) |
+| `GET` | `/usuarios/admin/{id}` | Lista todos os usuários do sistema (exclusivo para `admin`) |
+| `DELETE` | `/usuarios/{id_admin}?id_usuario={id}` | Remove um usuário do banco (exclusivo para `admin` ativo) |
 
 ### 📈 Progresso de Leitura (`/progresso`)
 | Método | Rota | Descrição |
 | :--- | :--- | :--- |
 | `POST` | `/progresso/` | Inicia o registro de progresso de leitura de um livro para um usuário |
-| `PUT` | `/progresso/{usuario_id}/{livro_id}/` | Atualiza a página atual de leitura e recalcula o status de conclusão |
+| `PUT` | `/progresso/{usuario_id}/{livro_id}/` | Atualiza a página atual de leitura e recalcula automaticamente se foi concluído |
 | `GET` | `/progresso/{usuario_id}/` | Lista todo o histórico de leitura de um usuário |
 | `DELETE` | `/progresso/{id}/` | Remove um registro de progresso pelo ID |
 
@@ -204,6 +201,7 @@ CREATE TABLE IF NOT EXISTS progresso (
    uvicorn main:app --reload
    ```
 
-4. **Acesse a aplicação:**
-   * **Produção (Netlify):** [https://luminabokks.netlify.app](https://luminabokks.netlify.app)
-   * **API Swagger (Render):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
+4. **Acesse a documentação interativa:**
+   * **Swagger UI Local:** `http://127.0.0.1:8000/docs`
+   * **API em Produção (Render):** [https://luminabooks.onrender.com/docs](https://luminabooks.onrender.com/docs)
+   * **Aplicação Web (Netlify):** [https://luminabokks.netlify.app](https://luminabokks.netlify.app)
