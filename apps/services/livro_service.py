@@ -1,14 +1,35 @@
 from apps.schemas.livro_schemas import LivroCreate
 # pyrefly: ignore[missing-import]
-from pypdf import PdfReader
-# pyrefly: ignore[missing-import]
 import fitz
 import base64
 import os
+import shutil
+
 class LivroService:
     def __init__(self, livro_repository, usuario_repository):
         self.livro_repository = livro_repository
         self.usuario_repository = usuario_repository
+
+    def obter_fatias_paginas(self, documento_pdf):
+        fatias = []
+        for indice_pagina in range(len(documento_pdf)):
+            rect = documento_pdf[indice_pagina].rect
+            largura = rect.width
+            altura = rect.height
+
+            # Se o PDF for uma tira vertical gigante (ex: Mangá/Webtoon salvo de site em 1 página)
+            if largura > 0 and altura > largura * 2.2:
+                altura_fatia = largura * 1.45
+                y_atual = 0.0
+                while y_atual < altura:
+                    y_fim = min(y_atual + altura_fatia, altura)
+                    if (altura - y_fim) < (altura_fatia * 0.25):
+                        y_fim = altura
+                    fatias.append((indice_pagina, fitz.Rect(0, y_atual, largura, y_fim)))
+                    y_atual = y_fim
+            else:
+                fatias.append((indice_pagina, rect))
+        return fatias
 
     def salvar_arquivo_pdf(self, arquivo):
         if not arquivo.filename or not arquivo.filename.lower().endswith(".pdf"):
@@ -18,10 +39,12 @@ class LivroService:
         caminho_arquivo = f"uploads/{arquivo.filename}"
 
         with open(caminho_arquivo, "wb") as buffer:
-            buffer.write(arquivo.file.read())
+            shutil.copyfileobj(arquivo.file, buffer)
 
-        leitor = PdfReader(caminho_arquivo)
-        total_paginas = len(leitor.pages)
+        documento_pdf = fitz.open(caminho_arquivo)
+        fatias = self.obter_fatias_paginas(documento_pdf)
+        total_paginas = max(1, len(fatias))
+        documento_pdf.close()
         return caminho_arquivo, total_paginas
 
     def cadastrar(self, titulo, autor, total_paginas, arquivo_path, usuario_id):
@@ -110,26 +133,35 @@ class LivroService:
         livro = self.livro_repository.buscar_livro_por_id(id)
         if livro is None:
             raise ValueError("ID do livro não existe")
-        if pagina < 1 or pagina > livro["total_paginas"]:
-            raise ValueError("Número de página inválido para este livro")
         if not os.path.exists(livro["arquivo_path"]):
-            raise ValueError("Arquivo do livro não encontrado")
-    
-        leitor = PdfReader(livro["arquivo_path"])
-        texto = leitor.pages[pagina - 1].extract_text() or ""
+            raise ValueError("Arquivo do livro não encontrado no servidor. Envie o PDF novamente.")
 
-        # Renderiza a página como imagem (para Mangás, HQs e PDFs ilustrados)
         documento_pdf = fitz.open(livro["arquivo_path"])
-        pagina_visual = documento_pdf[pagina - 1]
-        pixmap = pagina_visual.get_pixmap(matrix=fitz.Matrix(1.6, 1.6))
-        imagem_base64 = base64.b64encode(pixmap.tobytes("png")).decode("utf-8")
+        fatias = self.obter_fatias_paginas(documento_pdf)
+        total_paginas_real = max(1, len(fatias))
+
+        if pagina < 1 or pagina > total_paginas_real:
+            documento_pdf.close()
+            raise ValueError("Número de página inválido para este livro")
+
+        indice_fisico, rect_fatia = fatias[pagina - 1]
+        pagina_visual = documento_pdf[indice_fisico]
+        texto = pagina_visual.get_text("text", clip=rect_fatia) or ""
+
+        # Calcula escala segura para não estourar os 512MB de RAM do Render em páginas grandes
+        largura_fatia = max(rect_fatia.width, 1.0)
+        altura_fatia = max(rect_fatia.height, 1.0)
+        escala = min(1.5, 950.0 / largura_fatia, 1800.0 / altura_fatia)
+
+        pixmap = pagina_visual.get_pixmap(matrix=fitz.Matrix(escala, escala), clip=rect_fatia, alpha=False)
+        imagem_base64 = base64.b64encode(pixmap.tobytes("jpeg", jpg_quality=82)).decode("utf-8")
         documento_pdf.close()
 
         return {
                 "id_livro": livro["id"],
                 "titulo": livro["titulo"],
                 "pagina_atual": pagina,
-                "total_paginas": livro["total_paginas"],
+                "total_paginas": total_paginas_real,
                 "texto": texto,
-                "imagem_base64": f"data:image/png;base64,{imagem_base64}"
+                "imagem_base64": f"data:image/jpeg;base64,{imagem_base64}"
                 }
